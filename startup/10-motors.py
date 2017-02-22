@@ -285,7 +285,7 @@ class DelayGenerator(Device):
 dg = DelayGenerator('XF:17BMA-ES:2{DG:1}', name = 'dg')
 
 msh = EpicsMotor('XF:17BMA-ES:2{Stg:4-Ax:X}Mtr', name='msh')
-tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='msh')
+tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='tbl2')
 
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
