@@ -156,10 +156,10 @@ class Pump(Device):
     direction = Cpt(EpicsSignal, 'Direction', string=True)
 
     diameter = Cpt(EpicsSignal, 'Diameter_RBV', write_pv='Diameter')
-    infusion_rate = Cpt(EpicsSignal, 'InfusionRate_RBV', write_pv='InfusionRate')
+    infusion_rate = Cpt(AgressiveSignal, 'InfusionRate_RBV', write_pv='InfusionRate')
     run = Cpt(EpicsSignal, 'Run', string=True)
     state = Cpt(EpicsSignalRO, 'State_RBV', string=True)
-    infusion_volume = Cpt(EpicsSignal, 'InfusionVolume_RBV', write_pv='InfusionVolume')
+    infusion_volume = Cpt(AgressiveSignal, 'InfusionVolume_RBV', write_pv='InfusionVolume')
 
     delivered = Cpt(EpicsSignalRO, 'Delivered_RBV')
 
@@ -273,9 +273,50 @@ class Pump(Device):
         self.run.set('Stop')
 
 
-
 pump1 = Pump('XF:17BM-ES:1{Pmp:01}', name='food_pump')
 spump = Pump('XF:17BM-ES:1{Pmp:01}', name='syringe_pump')
+
+class DelayGenerator(Device):
+    mode = Cpt(EpicsSignal, 'trigModeSetMO', write_pv='trigModeSetMO')
+    exp_time = Cpt(EpicsSignal, 'bDelaySetAO', write_pv='bDelaySetAO')
+    delay = Cpt(EpicsSignalRO, 'bDelaySI')
+    fire = Cpt(EpicsSignal, 'genSingleShotTrigBO', write_pv='genSingleShotTrigBO')
+
+dg = DelayGenerator('XF:17BMA-ES:2{DG:1}', name = 'dg')
+
+msh = EpicsMotor('XF:17BMA-ES:2{Stg:4-Ax:X}Mtr', name='msh')
+tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='msh')
+
+class ModXY_CF(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+cf = ModXY_CF('XF:17BMA-ES:1{Stg:5-Ax:', name='cf')
+
+class ModXY_Stg3(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+modxy = ModXY_Stg3('XF:17BMA-ES:1{Stg:3-Ax:', name='modxy')
+
+class BeamPipeStage(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+pipe = BeamPipeStage('XF:17BMA-OP{Stg:2-Ax:', name='pipe')
+
+class XZStage(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    z = Cpt(EpicsMotor, 'Z}Mtr')
+
+xz = XZStage('XF:17BMA-ES:1{Stg:1-Ax:', name='xz')
+
+class Table1(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+    z = Cpt(EpicsMotor, 'Z}Mtr')
+
+tbl1 = Table1('XF:17BMA-ES:1{Tbl:1-Ax:', name='tbl1')
 
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
