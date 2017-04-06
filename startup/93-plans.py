@@ -1,4 +1,4 @@
-#mess with the syringe pump
+#syringe pump capillary flow experiment
 
 import datetime
 

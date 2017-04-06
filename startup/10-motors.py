@@ -142,13 +142,27 @@ class SamplePump(Device):
     def stop(self):
         self.stop_cmd.put(1)
 
-class FractionCollector(Device):
-    ...
-
 sample_pump = SamplePump('XF:17BMA-ES:1{Pmp:02}',
                          name='sample_pump',
                          read_attrs=['vel', 'sts'])
-fraction_collector = SamplePump('', name='fraction_collector')
+
+class FractionCollector(Device):
+    run = Cpt(EpicsSignal, 'Run-Cmd')
+    end = Cpt(EpicsSignal, 'Stop-Cmd')
+    stp = Cpt(EpicsSignal, 'Pause-Cmd')
+    tube = Cpt(EpicsSignal, 'RTube-RB', write_pv='RTube-SP')
+    hm = Cpt(EpicsSignal, 'Home-Cmd')
+    ftime = Cpt(EpicsSignal, 'Time:FSize-RB', write_pv='Time:FSize-SP')
+    r1last = Cpt(EpicsSignal, 'Tube:R1Last-RB', write_pv='Tube:R1Last-SP')
+    r2last = Cpt(EpicsSignal, 'Tube:R2Last-RB', write_pv='Tube:R2Last-SP')
+    #pattern 1 = standard s-pattern; pattern 2 = left to right
+    pattern = Cpt(EpicsSignal, 'Type:Pattn-Sel', write_pv='Type:Pattn-Sel')
+    # valve 0 = waste, valve 1 = collect
+    valve = Cpt(EpicsSignal, 'Vlv-Sel', write_pv='Vlv-Sel')
+    # ftype 1 = time, ftype 2 = drops, ftype 3 = external counts
+    ftype = Cpt(EpicsSignal, 'Type:Fraction-Sel', write_pv='Type:Fraction-Sel')
+
+fc = FractionCollector('XF:17BM-ES:1{FC:1}', name='fc')
 
 class Pump(Device):
     # This needs to be turned into a PV positioner
@@ -279,13 +293,93 @@ spump = Pump('XF:17BM-ES:1{Pmp:01}', name='syringe_pump')
 class DelayGenerator(Device):
     mode = Cpt(EpicsSignal, 'trigModeSetMO', write_pv='trigModeSetMO')
     exp_time = Cpt(EpicsSignal, 'bDelaySetAO', write_pv='bDelaySetAO')
-    delay = Cpt(EpicsSignalRO, 'bDelaySI')
+
+    delay = Cpt(EpicsSignalRO, 'bDelayAI')
+    delay_status = Cpt(EpicsSignalRO, 'bDelayAI.STAT')
+    exp_time_status = Cpt(EpicsSignalRO, 'bDelaySetAO.STAT')
     fire = Cpt(EpicsSignal, 'genSingleShotTrigBO', write_pv='genSingleShotTrigBO')
+
+    _complete_set = None
+    
+    def set(self, val, *, timeout=None, settle_time=None):
+        cp_st = DeviceStatus(self)
+        if val == self.delay.get():
+            cp_st._finished()
+            return cp_st
+        
+        self._complete_st = cp_st
+        rekicking = False
+        
+        def stat_monitor(value, **kwargs):
+            nonlocal rekicking
+            
+            if not rekicking and value:
+                print('err', value)
+                rekicking = True
+                print('wait, then set to 0')
+                sleep(5)
+                self.exp_time.set(0)
+                print('wait, then set to val')
+                sleep(5)
+                rekicking = False
+                self.exp_time.set(val)
+                print('rekicked')
+
+        def stat_write_monitor(value, **kwargs):
+            if value:
+                print('write failed')
+                sleep(5)
+                self.exp_time.set(self.exp_time.get())                          
+                
+        self.delay_status.subscribe(stat_monitor, run=False)
+        self.exp_time_status.subscribe(stat_write_monitor, run=False)
+        
+        def rb_monitor(value, **kwargs):
+            nonlocal rekicking
+            if rekicking:
+                print('bail')
+                return
+            
+            if np.isclose(value, val):
+                self._complete_st = None
+                self.delay_status.clear_sub(stat_monitor)
+                self.delay.clear_sub(rb_monitor)
+                self.exp_time_status.clear_sub(stat_write_monitor)
+                cp_st._finished()
+        self.delay.subscribe(rb_monitor, run=False)
+        self.exp_time.set(val)
+        
+        return cp_st
+
+    def stop(self, *, success):
+        # TODO make this less brute force
+        self.delay_status._reset_sub('value')
+        self.delay._reset_sub('value')
+        self.exp_time_status._reset_sub('value')
 
 dg = DelayGenerator('XF:17BMA-ES:2{DG:1}', name = 'dg')
 
 msh = EpicsMotor('XF:17BMA-ES:2{Stg:4-Ax:X}Mtr', name='msh')
 tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='tbl2')
+mshlift = EpicsMotor('XF:17BMA-ES:2{Stg:6-Ax:Y}Mtr', name='mshlift')
+
+class SR630(Device):
+#Note: Channels start at 0 (i.e. setting channel to 0 is actually choosing Ch1)
+    channel = Cpt(EpicsSignal, 'rCurr_Chan', write_pv='wCurr_Chan')
+    val = Cpt(EpicsSignalRO, 'rCurr_Measure')
+    unit = Cpt(EpicsSignalRO, 'rCurr_Units', string=True)
+
+tcm1 = SR630('XF:17BMA-ES:2{TCM:1}', name='tcm1', 
+	read_attrs=['val'], configuration_attrs=['unit', 'channel'])
+pin_diode = SR630('XF:17BMA-ES:2{TCM:1}', name='pin_diode')
+
+class QuadEM(Device):
+    ch1 = Cpt(EpicsSignalRO, 'EM180:Current1:MeanValue_RBV')
+    ch2 = Cpt(EpicsSignalRO, 'EM180:Current2:MeanValue_RBV')
+    ch3 = Cpt(EpicsSignalRO, 'EM180:Current3:MeanValue_RBV')
+    ch4 = Cpt(EpicsSignalRO, 'EM180:Current4:MeanValue_RBV')
+
+quad = QuadEM('XF:17BM-BI{EM:1}', name='quad')
 
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
@@ -321,3 +415,4 @@ tbl1 = Table1('XF:17BMA-ES:1{Tbl:1-Ax:', name='tbl1')
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
 #feslits2 = InBottomSlits('FE:C17B-OP{Slt:2-Ax:', name='feslits2')
+

@@ -1,3 +1,4 @@
+from collections import ChainMap
 import datetime
 
 
@@ -32,6 +33,7 @@ def invivo_dr(flow_rate, pre_vol, exp_vol, *, md=None):
     md['exp_vol'] = exp_vol
 
     @bp.run_decorator(md=ChainMap(md, {'plan_name': 'invivo_dr'}))
+  # @bp.run_decorator(md={'plan_name': 'invivo_dr'})
     def inner_plan():
         # prevent pausing
         yield from bp.clear_checkpoint()
