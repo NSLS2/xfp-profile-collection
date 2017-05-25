@@ -73,6 +73,9 @@ class XFPSampleSelector:
     def show(self):
         return self.window.show()
 
+    def close(self):
+        return self.window.close()
+
     def uncheck(self):
         MSHgui.controls
         for column in MSHgui.controls:                                          
@@ -124,7 +127,8 @@ def xfp_plan_fast_shutter(d):
     #close the protective shutter
     yield from bp.abs_set(shutter, 'Close', wait=True)
     
-    return (yield from bp.count([msh, mshlift, pin_diode], md=d))
+    return (yield from bp.count([msh, mshlift, pin_diode
+                                ], md=d))
 
 v_pos = np.array(
        [-.31, -0.33, -0.29, -0.28, -0.21696265,
@@ -140,8 +144,13 @@ h_pos = np.array(
         -29.8,  -14.91672256,    0.3,   15.5016519,
          30.55801061,   45.26752689,   60.38711324,   75.35637427,
          90.49112622,  105.31326202,  120.36494778,  135.36070856])
-  
+ 
+try:
+    MSHgui.close()
+except NameError:
+    pass
 MSHgui = XFPSampleSelector(h_pos, v_pos)
+MSHgui.uncheck()
 #MSHgui.show()
 
 
