@@ -1,6 +1,8 @@
-from matplotlib.backends.qt_compat import QtWidgets
+from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
 import bluesky.plans as bp
 import pandas as pd
+import os
 
 class ColumnWidget:
     def __init__(self, j):
@@ -40,20 +42,83 @@ class ColumnWidget:
     @property
     def exposure(self):
         return self.sb.value()
+    
+class DirectorySelector:
+    '''
+    A widget class deal with selecting and displaying path names
+    '''
 
+
+    def __init__(self, caption, path=''):
+        self.cap = caption
+        widget = self.widget = QtWidgets.QGroupBox(caption)
+        notes = self.notes = QtWidgets.QTextEdit('')
+
+        hlayout = QtWidgets.QHBoxLayout()
+        self.label = label = QtWidgets.QLabel(path)
+        short_desc = self.short_desc = QtWidgets.QLineEdit('')
+            
+        hlayout.addWidget(self.label)
+        hlayout.addStretch()
+        button = QtWidgets.QPushButton('')
+        button.setIcon(QtGui.QIcon.fromTheme('folder'))
+        button.clicked.connect(self.select_path)
+        # hlayout.addWidget(button)
+        
+        f_layout = QtWidgets.QFormLayout()
+        f_layout.addRow(button, hlayout)
+        f_layout.addRow('short description', short_desc)
+        # f_layout.addRow('overall notes', notes)
+              
+        widget.setLayout(f_layout)
+       
+
+    @QtCore.Slot(str)
+    def set_path(self, path):
+        if os.path.isdir(path):
+            self.label.setText(path)
+        else:
+            raise Exception("path does not exst")
+
+    @QtCore.Slot()
+    def select_path(self):
+        cur_path = self.path
+        if len(cur_path) == 0:
+            cur_path = ''
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            self.widget, caption=self.cap, directory=cur_path)
+
+        if len(path) > 0:
+            self.path = path
+            return path
+        else:
+            path = None
+        return path
+
+    @property
+    def path(self):
+        return self.label.text()
+
+    @path.setter
+    def path(self, in_path):
+        self.set_path(in_path)
+        
+        
 class XFPSampleSelector:
     def __init__(self, h_pos, v_pos):
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP Mult-Sample Holder Samples')
         mw = QtWidgets.QWidget()
         layout = QtWidgets.QGridLayout()
-
+        self.path_select = path = DirectorySelector('CSV path')
         self.controls = []
         
         for j in range(24):
+            r, c = np.unravel_index(j, (4, 6))            
             if j == 10:
+                layout.addWidget(path.widget, r, c)
                 continue
-            r, c = np.unravel_index(j, (4, 6))
+
             cw = ColumnWidget(j)
             layout.addWidget(cw.cb, r, c)
             self.controls.append(cw)
@@ -84,9 +149,24 @@ class XFPSampleSelector:
             column.cb.setChecked(False)
 
     def plan(self, file_name=None):
+        reason = self.path_select.short_desc.displayText()
+        run_notes = self.path_select.notes.toPlainText()
+        if file_name is None:
+            gui_path = self.path_select.path
+            if gui_path and reason:
+                fname = '_'.join(reason.split()) + '.csv'
+                file_name = os.path.join(gui_path, fname)
+        print(file_name)
+
         uid_list = []
-        for d in self.walk_values():
-            d.setdefault('plan_name', 'msh')
+        base_md = {'plan_name': 'msh'}
+        if reason:
+            base_md['reason'] = reason
+            
+        for gui_d in self.walk_values():
+            d = dict(base_md)
+            d.update(gui_d)
+            
             yield from bp.abs_set(msh,
                                   self.h_pos[d['position']],
                                   group='msh')
