@@ -86,6 +86,7 @@ class XFPSampleSelector:
     def plan(self, file_name=None):
         uid_list = []
         for d in self.walk_values():
+            d.setdefault('plan_name', 'msh')
             yield from bp.abs_set(msh,
                                   self.h_pos[d['position']],
                                   group='msh')
