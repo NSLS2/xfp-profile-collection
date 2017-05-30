@@ -5,8 +5,8 @@ def _align(dir_name, mtr,
            start, stop, num_points, *,
            md=None):
     fig = plt.figure('align {}'.format(mtr.name))
-    lp = LivePlot('tcm1_val', mtr.name, ax=fig.gca())
-    ps = PeakStats(mtr.name, 'tcm1_val')
+    lp = LivePlot('quad_ch4', mtr.name, ax=fig.gca())
+    ps = PeakStats(mtr.name, 'quad_ch4')
     
     _md = {'purpose': 'table height alignment',
            'plan_name': '_align',
@@ -15,7 +15,7 @@ def _align(dir_name, mtr,
     yield from bp.mv(shutter, 'Open')
     
     r = yield from bp.subs_wrapper(
-            bp.relative_scan([tcm1, mshlift, msh],
+            bp.relative_scan([quad, mshlift, msh],
                              mtr,
                              start, stop, num_points,
                              md=_md),

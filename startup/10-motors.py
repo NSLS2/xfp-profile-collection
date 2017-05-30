@@ -371,15 +371,20 @@ class SR630(Device):
 
 tcm1 = SR630('XF:17BMA-ES:2{TCM:1}', name='tcm1', 
 	read_attrs=['val'], configuration_attrs=['unit', 'channel'])
-pin_diode = SR630('XF:17BMA-ES:2{TCM:1}', name='pin_diode')
+#pin_diode = SR630('XF:17BMA-ES:2{TCM:1}', name='pin_diode')
+
 
 class QuadEM(Device):
-    ch1 = Cpt(EpicsSignalRO, 'EM180:Current1:MeanValue_RBV')
-    ch2 = Cpt(EpicsSignalRO, 'EM180:Current2:MeanValue_RBV')
-    ch3 = Cpt(EpicsSignalRO, 'EM180:Current3:MeanValue_RBV')
+#    ch1 = Cpt(EpicsSignalRO, 'EM180:Current1:MeanValue_RBV')
+#    ch2 = Cpt(EpicsSignalRO, 'EM180:Current2:MeanValue_RBV')
+#    ch3 = Cpt(EpicsSignalRO, 'EM180:Current3:MeanValue_RBV')
     ch4 = Cpt(EpicsSignalRO, 'EM180:Current4:MeanValue_RBV')
 
-quad = QuadEM('XF:17BM-BI{EM:1}', name='quad')
+quad = QuadEM('XF:17BM-BI{EM:1}', name='quad', 
+	read_attrs=['ch4'])
+
+pin_diode = QuadEM('XF:17BM-BI{EM:1}', name='pin_diode')
+
 
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
