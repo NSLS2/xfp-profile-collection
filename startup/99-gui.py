@@ -127,32 +127,56 @@ def xfp_plan_fast_shutter(d):
     #close the protective shutter
     yield from bp.abs_set(shutter, 'Close', wait=True)
     
-    return (yield from bp.count([msh, mshlift, pin_diode
+    return (yield from bp.count([msh, mshlift, # pin_diode
                                 ], md=d))
 
 v_pos = np.array(
-       [-.31, -0.33, -0.29, -0.28, -0.21696265,
-       -0.24448264, -0.10, -0.26 , -0.22486145, -0.19,
-               np.nan, -0.24427941, -0.14578496, -0.20066818, -0.21102896,
-       -0.04099325, -0.08536624, -0.12224383, -0.10009569, -0.10,
-       -0.14782382, -0.18598082, -0.10, -0.06438867])
+       [.3, 0.3, 0.4, .6, 0.3,
+       0.4, 0.30, 0.25 , 0.4, 0.4,
+               np.nan, 0.5, .35, 0.45, 0.35,
+       0.4, 0.7, 0.6, 0.6, 0.65,
+       0.65, 0.75, 0.75, 0.9])
 
 h_pos = np.array(
-      [-210.22962677, -195.17671138, -180.24262494, -165.120419  ,
-       -150.23601044, -135.4387167 , -120.41666077, -105.55154939,
-        -90.49264254,  -75.23829315,  -60.45       ,  -45.0,
-        -29.8,  -14.91672256,    0.3,   15.5016519,
-         30.55801061,   45.26752689,   60.38711324,   75.35637427,
-         90.49112622,  105.31326202,  120.36494778,  135.36070856])
+      [-210.3, -195.2, -180.3, -165.1  ,
+       -150.3, -135.53 , -120.51, -105.65,
+        -90.59,  -75.34,  -60.55,  -45.1,
+        -29.9,  -15,    0.2,   15.4,
+         30.5,   45.5,   60.28,   75.25,
+         90.39,  105.21,  120.26,  135.26])
  
 try:
     MSHgui.close()
 except NameError:
     pass
 MSHgui = XFPSampleSelector(h_pos, v_pos)
-MSHgui.uncheck()
 #MSHgui.show()
 
 
 #Need to add in an obvious go button to gui
 #Good to have a pause/unpause (with shutter closings as fail-safe)
+
+
+
+
+search_result = lambda h: "{start[plan_name]} ['{start[uid]:.6}']".format(**h)
+text_summary = lambda h: "This is a {start[plan_name]}.".format(**h)
+
+
+def fig_dispatch(header, factory):
+    plan_name = header['start']['plan_name']
+    if 'image_det' in header['start']['detectors']:
+        fig = factory('Image Series')
+        cs = CrossSection(fig)
+        sv = StackViewer(cs, db.get_images(header, 'image'))
+    elif len(header['start'].get('motors', [])) == 1:
+        motor, = header['start']['motors']
+        main_det, *_ = header['start']['detectors']
+        fig = factory("{} vs {}".format(main_det, motor))
+        ax = fig.gca()
+        lp = LivePlot(main_det, motor, ax=ax)
+        db.process(header, lp)
+
+
+def browse():
+    return BrowserWindow(db, fig_dispatch, text_summary, search_result)
