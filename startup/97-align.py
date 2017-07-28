@@ -5,8 +5,8 @@ def _align(dir_name, mtr,
            start, stop, num_points, *,
            md=None):
     fig = plt.figure('align {}'.format(mtr.name))
-    lp = LivePlot('quad_ch4', mtr.name, ax=fig.gca())
-    ps = PeakStats(mtr.name, 'quad_ch4')
+    lp = LivePlot('quad_ch3', mtr.name, ax=fig.gca())
+    ps = PeakStats(mtr.name, 'quad_ch3')
     
     _md = {'purpose': 'table height alignment',
            'plan_name': '_align',
