@@ -327,7 +327,7 @@ class DelayGenerator(Device):
 
         def stat_write_monitor(value, **kwargs):
             if value:
-                print('write failed')
+                print('delay generator write failed')
                 sleep(5)
                 self.exp_time.set(self.exp_time.get())                          
                 
@@ -377,11 +377,11 @@ tcm1 = SR630('XF:17BMA-ES:2{TCM:1}', name='tcm1',
 class QuadEM(Device):
 #    ch1 = Cpt(EpicsSignalRO, 'EM180:Current1:MeanValue_RBV')
 #    ch2 = Cpt(EpicsSignalRO, 'EM180:Current2:MeanValue_RBV')
-#    ch3 = Cpt(EpicsSignalRO, 'EM180:Current3:MeanValue_RBV')
-    ch4 = Cpt(EpicsSignalRO, 'EM180:Current4:MeanValue_RBV')
+    ch3 = Cpt(EpicsSignalRO, 'EM180:Current3:MeanValue_RBV')
+#    ch4 = Cpt(EpicsSignalRO, 'EM180:Current4:MeanValue_RBV')
 
 quad = QuadEM('XF:17BM-BI{EM:1}', name='quad', 
-	read_attrs=['ch4'])
+	read_attrs=['ch3'])
 
 pin_diode = QuadEM('XF:17BM-BI{EM:1}', name='pin_diode')
 
