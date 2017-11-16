@@ -385,12 +385,15 @@ quad = QuadEM('XF:17BM-BI{EM:1}', name='quad',
 
 pin_diode = QuadEM('XF:17BM-BI{EM:1}', name='pin_diode')
 
+diode = QuadEM('XF:17BM-BI{EM:BPM1}Current4:MeanValue_RBV', name = 'diode')
 
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
     y = Cpt(EpicsMotor, 'Y}Mtr')
 
 cf = ModXY_CF('XF:17BMA-ES:1{Stg:5-Ax:', name='cf')
+modx = EpicsMotor('XF:17BMA-ES:1{Stg:5-Ax:X}Mtr', name = 'modx')
+
 
 class ModXY_Stg3(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
