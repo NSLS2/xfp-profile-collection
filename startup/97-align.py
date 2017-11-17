@@ -1,5 +1,5 @@
 import bluesky.plans as bp
-from  bluesky.callbacks.scientific import plot_peak_stats
+from  bluesky.callbacks.mpl_plotting import plot_peak_stats
 
 def _align(dir_name, mtr,
            start, stop, num_points, *,
