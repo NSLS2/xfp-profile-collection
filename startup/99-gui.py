@@ -1,5 +1,16 @@
+import numpy as np
+
+#TODO(mr): remove later, for dev/tests only:
+import matplotlib.pyplot as plt
+plt.ion()
+from bluesky.utils import install_qt_kicker
+install_qt_kicker()
+
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
-from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
+
+#TODO(mr): move to a separate file:
+# from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
+
 import bluesky.plans as bp
 import pandas as pd
 import os
@@ -70,16 +81,15 @@ class DirectorySelector:
         # f_layout.addRow('overall notes', notes)
               
         widget.setLayout(f_layout)
-       
 
     @QtCore.Slot(str)
     def set_path(self, path):
         if os.path.isdir(path):
             self.label.setText(path)
         else:
-            raise Exception("path does not exst")
+            raise Exception("path does not exist")
 
-    @QtCore.Slot()
+    # @QtCore.Slot()
     def select_path(self):
         cur_path = self.path
         if len(cur_path) == 0:
@@ -100,19 +110,20 @@ class DirectorySelector:
 
     @path.setter
     def path(self, in_path):
-        self.set_path(in_path)       
+        self.set_path(in_path)
         
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos):
+    def __init__(self, h_pos, v_pos, rows=4, cols=6):
         self.window = window = QtWidgets.QMainWindow()
-        window.setWindowTitle('XFP Mult-Sample Holder Samples')
+        window.setWindowTitle('XFP Multi-Sample Holder')
         mw = QtWidgets.QWidget()
         layout = QtWidgets.QGridLayout()
+
         self.path_select = path = DirectorySelector('CSV path')
         self.controls = []
-        
-        for j in range(24):
-            r, c = np.unravel_index(j, (4, 6))            
+
+        for j in range(rows*cols):
+            r, c = np.unravel_index(j, (rows, cols))
             if j == 10:
                 layout.addWidget(path.widget, r, c)
                 continue
@@ -121,11 +132,21 @@ class XFPSampleSelector:
             layout.addWidget(cw.cb, r, c)
             self.controls.append(cw)
 
+        # blayout = QtWidgets.QHBoxLayout()
+        button = QtWidgets.QPushButton('Run')
+        # button.setIcon(QtGui.QIcon.fromTheme('folder'))
+        button.clicked.connect(self.run)
+        layout.addWidget(button)
+
         mw.setLayout(layout)
         window.setCentralWidget(mw)
 
         self.h_pos = h_pos
         self.v_pos = v_pos
+
+    def run(self):
+        ...
+        print(self.walk_values())
 
     def walk_values(self):
         return [{'exposure': d.exposure,
@@ -231,7 +252,7 @@ try:
 except NameError:
     pass
 MSHgui = XFPSampleSelector(h_pos, v_pos)
-#MSHgui.show()
+MSHgui.show()
 
 
 #Need to add in an obvious go button to gui
@@ -239,25 +260,24 @@ MSHgui = XFPSampleSelector(h_pos, v_pos)
 
 
 
+#TODO(mrakitin): move the code below to a separate module - the code is unrelated:
+# search_result = lambda h: "{start[plan_name]} ['{start[uid]:.6}']".format(**h)
+# text_summary = lambda h: "This is a {start[plan_name]}.".format(**h)
 
-search_result = lambda h: "{start[plan_name]} ['{start[uid]:.6}']".format(**h)
-text_summary = lambda h: "This is a {start[plan_name]}.".format(**h)
-
-
-def fig_dispatch(header, factory):
-    plan_name = header['start']['plan_name']
-    if 'image_det' in header['start']['detectors']:
-        fig = factory('Image Series')
-        cs = CrossSection(fig)
-        sv = StackViewer(cs, db.get_images(header, 'image'))
-    elif len(header['start'].get('motors', [])) == 1:
-        motor, = header['start']['motors']
-        main_det, *_ = header['start']['detectors']
-        fig = factory("{} vs {}".format(main_det, motor))
-        ax = fig.gca()
-        lp = LivePlot(main_det, motor, ax=ax)
-        db.process(header, lp)
-
-
-def browse():
-    return BrowserWindow(db, fig_dispatch, text_summary, search_result)
+# def fig_dispatch(header, factory):
+#     plan_name = header['start']['plan_name']
+#     if 'image_det' in header['start']['detectors']:
+#         fig = factory('Image Series')
+#         cs = CrossSection(fig)
+#         sv = StackViewer(cs, db.get_images(header, 'image'))
+#     elif len(header['start'].get('motors', [])) == 1:
+#         motor, = header['start']['motors']
+#         main_det, *_ = header['start']['detectors']
+#         fig = factory("{} vs {}".format(main_det, motor))
+#         ax = fig.gca()
+#         lp = LivePlot(main_det, motor, ax=ax)
+#         db.process(header, lp)
+#
+#
+# def browse():
+#     return BrowserWindow(db, fig_dispatch, text_summary, search_result)
