@@ -8,8 +8,6 @@ install_qt_kicker()
 
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 
-#TODO(mr): move to a separate file:
-# from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
 
 import bluesky.plans as bp
 import pandas as pd
@@ -111,6 +109,80 @@ class DirectorySelector:
     @path.setter
     def path(self, in_path):
         self.set_path(in_path)
+
+class RunEngineControls:
+    def __init__(self, RE, GUI):
+        self.RE = RE
+        self.GUI = GUI
+
+        self.widget = button_widget = QtWidgets.QWidget() 
+        button_layout = QtWidgets.QHBoxLayout()
+        button_widget.setLayout(button_layout)
+
+        label = QtWidgets.QLabel('Idle')
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setStyleSheet('QLabel {background-color: green; color: white}')
+        button_layout.addWidget(label)
+
+        # Run button to execute RE
+        button_run = QtWidgets.QPushButton('Run')
+        button_run.clicked.connect(self.run)
+        button_layout.addWidget(button_run)
+
+        # Run button to execute RE
+        button_pause = QtWidgets.QPushButton('Pause')
+        button_pause.clicked.connect(self.pause)
+        button_layout.addWidget(button_pause)
+
+        self.label = label
+        self.button_run = button_run
+        self.button_pause = button_pause
+        self.RE.state_hook = self.handle_state_change
+        self.handle_state_change(self.RE.state, None)
+
+    def run(self):
+        if self.RE.state == 'idle':
+            self.RE(self.GUI.plan())
+        else:
+            self.RE.resume()
+
+    def pause(self):
+        if self.RE.state == 'running':
+            self.RE.request_pause()
+        elif self.RE.state == 'paused':
+            self.RE.stop()
+
+    def handle_state_change(self, new, old):
+        if new == 'idle':
+            state = 'Idle'
+            color = 'green'
+            button_run_enabled = True
+            button_pause_enabled = False
+            button_run_text = 'Run'
+            button_pause_text = 'Pause'
+        elif new == 'paused':
+            state = 'Paused'
+            color = 'blue'
+            button_run_enabled = True
+            button_pause_enabled = True
+            button_run_text = 'Resume'
+            button_pause_text = 'Stop'
+        elif new == 'running':
+            state = 'Running'
+            color = 'red'
+            button_run_enabled = False
+            button_pause_enabled = True
+            button_run_text = 'Run'
+            button_pause_text = 'Pause'
+
+        self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
+        self.label.setText(state)
+
+        self.button_run.setEnabled(button_run_enabled)
+        self.button_run.setText(button_run_text)
+        self.button_pause.setEnabled(button_pause_enabled)
+        self.button_pause.setText(button_pause_text)
+
         
 class XFPSampleSelector:
     def __init__(self, h_pos, v_pos, rows=4, cols=6):
@@ -121,22 +193,31 @@ class XFPSampleSelector:
 
         self.path_select = path = DirectorySelector('CSV path')
         self.controls = []
+        self.re_controls = RunEngineControls(RE, self)
 
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
             if j == 10:
-                layout.addWidget(path.widget, r, c)
+
+                w = QtWidgets.QWidget()
+                wbox = QtWidgets.QVBoxLayout()
+                w.setLayout(wbox)
+                layout.addWidget(w, r, c)
+
+                wbox.addWidget(path.widget)
+                wbox.addWidget(self.re_controls.widget)
+
+                button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
+                button_toggle_all.setCheckable(True)
+                button_toggle_all.setChecked(True)
+                button_toggle_all.toggled.connect(self.toggle_all)
+                wbox.addWidget(button_toggle_all)
+
                 continue
 
             cw = ColumnWidget(j)
             layout.addWidget(cw.cb, r, c)
             self.controls.append(cw)
-
-        # blayout = QtWidgets.QHBoxLayout()
-        button = QtWidgets.QPushButton('Run')
-        # button.setIcon(QtGui.QIcon.fromTheme('folder'))
-        button.clicked.connect(self.run)
-        layout.addWidget(button)
 
         mw.setLayout(layout)
         window.setCentralWidget(mw)
@@ -144,9 +225,6 @@ class XFPSampleSelector:
         self.h_pos = h_pos
         self.v_pos = v_pos
 
-    def run(self):
-        ...
-        print(self.walk_values())
 
     def walk_values(self):
         return [{'exposure': d.exposure,
@@ -160,12 +238,9 @@ class XFPSampleSelector:
     def close(self):
         return self.window.close()
 
-    def uncheck(self):
-        MSHgui.controls
-        for column in MSHgui.controls:                                          
-            column.cb.setChecked(False)
-        for column in MSHgui.controls:
-            column.cb.setChecked(False)
+    def toggle_all(self, state):
+        for column in self.controls:
+            column.cb.setChecked(state)
 
     def plan(self, file_name=None):
         reason = self.path_select.short_desc.displayText()
@@ -252,13 +327,14 @@ try:
 except NameError:
     pass
 MSHgui = XFPSampleSelector(h_pos, v_pos)
-MSHgui.show()
+# MSHgui.show()
 
 
 #Need to add in an obvious go button to gui
 #Good to have a pause/unpause (with shutter closings as fail-safe)
 
-
+#TODO(mr): move to a separate file:
+# from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
 
 #TODO(mrakitin): move the code below to a separate module - the code is unrelated:
 # search_result = lambda h: "{start[plan_name]} ['{start[uid]:.6}']".format(**h)
