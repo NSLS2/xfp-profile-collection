@@ -33,9 +33,9 @@ class ColumnWidget:
         cb.setChecked(True)
 
         f_layout = QtWidgets.QFormLayout()
-        f_layout.addRow('name', le)
-        f_layout.addRow('exposure[ms]', sb)
-        f_layout.addRow('notes', notes)
+        # f_layout.addRow('name', le)
+        # f_layout.addRow('exposure[ms]', sb)
+        # f_layout.addRow('notes', notes)
         f_layout.addRow('', indicator)
          
         cb.setLayout(f_layout)
@@ -209,11 +209,14 @@ def motors_positions(motors):
 
         
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos, rows=4, cols=6):
+    def __init__(self, h_pos, v_pos, rows=12, cols=8):
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP Multi-Sample Holder')
         mw = QtWidgets.QWidget()
-        layout = QtWidgets.QGridLayout()
+
+        layout = QtWidgets.QHBoxLayout()
+        slots_layout = QtWidgets.QGridLayout()
+        controls_layout = QtWidgets.QHBoxLayout()
 
         self.path_select = path = DirectorySelector('CSV path')
         self.controls = []
@@ -221,33 +224,33 @@ class XFPSampleSelector:
 
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
-            if j == 10:
-
-                w = QtWidgets.QWidget()
-                wbox = QtWidgets.QVBoxLayout()
-                w.setLayout(wbox)
-                layout.addWidget(w, r, c)
-
-                wbox.addWidget(path.widget)
-                wbox.addWidget(self.re_controls.widget)
-
-                button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
-                button_toggle_all.setCheckable(True)
-                button_toggle_all.setChecked(True)
-                button_toggle_all.toggled.connect(self.toggle_all)
-                wbox.addWidget(button_toggle_all)
-
-                button_align = QtWidgets.QPushButton('Align')
-                button_align.clicked.connect(self.align_msh)
-                wbox.addWidget(button_align)
-
-                continue
-
             cw = ColumnWidget(j)
-            layout.addWidget(cw.cb, r, c)
+            slots_layout.addWidget(cw.cb, r, c)
             self.controls.append(cw)
 
-        mw.setLayout(layout)
+        mw.setLayout(slots_layout)
+
+
+        '''
+        # Controls:
+        w = QtWidgets.QWidget()
+        wbox = QtWidgets.QVBoxLayout()
+        w.setLayout(wbox)
+        controls_layout.addWidget(w)
+
+        wbox.addWidget(path.widget)
+        wbox.addWidget(self.re_controls.widget)
+
+        button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
+        button_toggle_all.setCheckable(True)
+        button_toggle_all.setChecked(True)
+        button_toggle_all.toggled.connect(self.toggle_all)
+        wbox.addWidget(button_toggle_all)
+
+        button_align = QtWidgets.QPushButton('Align')
+        button_align.clicked.connect(self.align_ht)
+        wbox.addWidget(button_align)
+        '''
         window.setCentralWidget(mw)
 
         self.h_pos = h_pos
@@ -270,8 +273,8 @@ class XFPSampleSelector:
         for column in self.controls:
             column.cb.setChecked(state)
 
-    def align_msh(self):
-        RE(align_msh(self.h_pos, self.v_pos))
+    def align_ht(self):
+        print(align_ht())
 
     def plan(self, file_name=None):
         reason = self.path_select.short_desc.displayText()
@@ -341,55 +344,38 @@ def xfp_plan_fast_shutter(d):
     return (yield from bp.count([msh, mshlift, # pin_diode
                                 ], md=d))
 
-v_pos = np.array(
-       [ 8.6,  8.6,  8.6,  8.6,  8.6,
-        8.6,  8.6,  8.6,  8.6 ,  8.6,
-               np.nan,  8.6,  8.6,  8.6,  8.6,
-        8.6,  8.6,  8.6,  8.6,  8.6,
-        8.6,  8.6,  8.6,  8.6 ])
-
 h_pos = np.array(
-      [-210.1,  -194.84,  -179.9,
-        -165.09,  -150.41,  -135.41,
-        -120.49,  -105.62,  -90.56,
-        -75.21,  -60.62,  -44.87,
-        -29.67,  -15,   0.14,
-         15.24,   30.49,   45.2,
-         60.22,   75.4,   90.1,
-         105.4,   120.59,   135.49])
- 
+      [[-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
+       [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.]])
+
+v_pos = np.array(
+      [[  0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.],
+       [  9.,   9.,   9.,   9.,   9.,   9.,   9.,   9.],
+       [ 18.,  18.,  18.,  18.,  18.,  18.,  18.,  18.],
+       [ 27.,  27.,  27.,  27.,  27.,  27.,  27.,  27.],
+       [ 36.,  36.,  36.,  36.,  36.,  36.,  36.,  36.],
+       [ 45.,  45.,  45.,  45.,  45.,  45.,  45.,  45.],
+       [ 54.,  54.,  54.,  54.,  54.,  54.,  54.,  54.],
+       [ 63.,  63.,  63.,  63.,  63.,  63.,  63.,  63.],
+       [ 72.,  72.,  72.,  72.,  72.,  72.,  72.,  72.],
+       [ 81.,  81.,  81.,  81.,  81.,  81.,  81.,  81.],
+       [ 90.,  90.,  90.,  90.,  90.,  90.,  90.,  90.],
+       [ 99.,  99.,  99.,  99.,  99.,  99.,  99.,  99.]])
+
 try:
-    MSHgui.close()
+    HTgui.close()
 except NameError:
     pass
-MSHgui = XFPSampleSelector(h_pos, v_pos)
-# MSHgui.show()
+HTgui = XFPSampleSelector(h_pos, v_pos)
 
 
-#Need to add in an obvious go button to gui
-#Good to have a pause/unpause (with shutter closings as fail-safe)
-
-#TODO(mr): move to a separate file:
-# from databroker_browser.qt import BrowserWindow, CrossSection, StackViewer
-
-#TODO(mrakitin): move the code below to a separate module - the code is unrelated:
-# search_result = lambda h: "{start[plan_name]} ['{start[uid]:.6}']".format(**h)
-# text_summary = lambda h: "This is a {start[plan_name]}.".format(**h)
-
-# def fig_dispatch(header, factory):
-#     plan_name = header['start']['plan_name']
-#     if 'image_det' in header['start']['detectors']:
-#         fig = factory('Image Series')
-#         cs = CrossSection(fig)
-#         sv = StackViewer(cs, db.get_images(header, 'image'))
-#     elif len(header['start'].get('motors', [])) == 1:
-#         motor, = header['start']['motors']
-#         main_det, *_ = header['start']['detectors']
-#         fig = factory("{} vs {}".format(main_det, motor))
-#         ax = fig.gca()
-#         lp = LivePlot(main_det, motor, ax=ax)
-#         db.process(header, lp)
-#
-#
-# def browse():
-#     return BrowserWindow(db, fig_dispatch, text_summary, search_result)
