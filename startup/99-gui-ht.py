@@ -13,6 +13,7 @@ import bluesky.plans as bp
 import pandas as pd
 import os
 
+
 class ColumnWidget:
     def __init__(self, j):
         self._position = j
@@ -37,7 +38,7 @@ class ColumnWidget:
         # f_layout.addRow('exposure[ms]', sb)
         # f_layout.addRow('notes', notes)
         f_layout.addRow('', indicator)
-         
+
         cb.setLayout(f_layout)
 
     @property
@@ -56,7 +57,7 @@ class ColumnWidget:
     @property
     def exposure(self):
         return self.sb.value()
-    
+
 class DirectorySelector:
     '''
     A widget class deal with selecting and displaying path names
@@ -70,19 +71,19 @@ class DirectorySelector:
         hlayout = QtWidgets.QHBoxLayout()
         self.label = label = QtWidgets.QLabel(path)
         short_desc = self.short_desc = QtWidgets.QLineEdit('')
-            
+
         hlayout.addWidget(self.label)
         hlayout.addStretch()
         button = QtWidgets.QPushButton('')
         button.setIcon(QtGui.QIcon.fromTheme('folder'))
         button.clicked.connect(self.select_path)
         # hlayout.addWidget(button)
-        
+
         f_layout = QtWidgets.QFormLayout()
         f_layout.addRow(button, hlayout)
         f_layout.addRow('short description', short_desc)
         # f_layout.addRow('overall notes', notes)
-              
+
         widget.setLayout(f_layout)
 
     @QtCore.Slot(str)
@@ -114,6 +115,7 @@ class DirectorySelector:
     @path.setter
     def path(self, in_path):
         self.set_path(in_path)
+
 
 class RunEngineControls:
     def __init__(self, RE, GUI, motors):
@@ -199,63 +201,56 @@ class RunEngineControls:
         self.button_pause.setText(button_pause_text)
 
 
-def motors_positions(motors):
-    format_str = []
-    motor_values = []
-    for m in motors:
-        format_str.append(f'{m.name}: {{}}')
-        motor_values.append(round(m.read()[m.name]['value'], 3))
-    return '\n'.join(format_str).format(*motor_values)
-
-        
 class XFPSampleSelector:
     def __init__(self, h_pos, v_pos, rows=12, cols=8):
         self.window = window = QtWidgets.QMainWindow()
-        window.setWindowTitle('XFP Multi-Sample Holder')
+        window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
+
+        # Main widget:
         mw = QtWidgets.QWidget()
 
-        layout = QtWidgets.QHBoxLayout()
+        # Main layout containing slots and control layouts:
+        main_layout = QtWidgets.QHBoxLayout()
+
+        # Slots:
         slots_layout = QtWidgets.QGridLayout()
-        controls_layout = QtWidgets.QHBoxLayout()
 
-        self.path_select = path = DirectorySelector('CSV path')
-        self.controls = []
-        self.re_controls = RunEngineControls(RE, self, motors=[msh, mshlift])
-
+        self.slots = []
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
             cw = ColumnWidget(j)
             slots_layout.addWidget(cw.cb, r, c)
-            self.controls.append(cw)
+            self.slots.append(cw)
 
-        mw.setLayout(slots_layout)
+        main_layout.addLayout(slots_layout)
 
-
-        '''
         # Controls:
-        w = QtWidgets.QWidget()
-        wbox = QtWidgets.QVBoxLayout()
-        w.setLayout(wbox)
-        controls_layout.addWidget(w)
+        controls_layout = QtWidgets.QVBoxLayout()
 
-        wbox.addWidget(path.widget)
-        wbox.addWidget(self.re_controls.widget)
+        self.path_select = path = DirectorySelector('CSV path')
+        self.re_controls = RunEngineControls(RE, self, motors=[msh, mshlift])
+
+        controls_layout.addWidget(path.widget)
+        controls_layout.addWidget(self.re_controls.widget)
 
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
         button_toggle_all.setChecked(True)
         button_toggle_all.toggled.connect(self.toggle_all)
-        wbox.addWidget(button_toggle_all)
+        controls_layout.addWidget(button_toggle_all)
 
+        # Button to align the holder:
         button_align = QtWidgets.QPushButton('Align')
         button_align.clicked.connect(self.align_ht)
-        wbox.addWidget(button_align)
-        '''
+        controls_layout.addWidget(button_align)
+
+        main_layout.addLayout(controls_layout)
+
+        mw.setLayout(main_layout)
         window.setCentralWidget(mw)
 
         self.h_pos = h_pos
         self.v_pos = v_pos
-
 
     def walk_values(self):
         return [{'exposure': d.exposure,
@@ -290,11 +285,11 @@ class XFPSampleSelector:
         base_md = {'plan_name': 'msh'}
         if reason:
             base_md['reason'] = reason
-            
+
         for gui_d in self.walk_values():
             d = dict(base_md)
             d.update(gui_d)
-            
+
             yield from bp.abs_set(msh,
                                   self.h_pos[d['position']],
                                   group='msh')
@@ -303,17 +298,17 @@ class XFPSampleSelector:
                                   group='msh')
 
             # awlays want to wait at least 3 seconds
-            yield from bp.sleep(3)	    
+            yield from bp.sleep(3)
             yield from bp.wait('msh')
 
             self.re_controls.info_label.setText(motors_positions([msh, mshlift]))
 
             uid = (yield from xfp_plan_fast_shutter(d))
             #uid = (yield from bp.count([msh, mshlift], md=d))
-            
+
             if uid is not None:
                 uid_list.append(uid)
-                
+
         if uid_list:
             columns = ('uid', 'name', 'exposure', 'notes')
             tbl = pd.DataFrame([[h.start[c] for c in columns]
@@ -323,7 +318,17 @@ class XFPSampleSelector:
                 tbl.to_csv(file_name, index=False)
 
         yield from bp.mv(msh, -275)
-            
+
+
+def motors_positions(motors):
+    format_str = []
+    motor_values = []
+    for m in motors:
+        format_str.append(f'{m.name}: {{}}')
+        motor_values.append(round(m.read()[m.name]['value'], 3))
+    return '\n'.join(format_str).format(*motor_values)
+
+
 def xfp_plan_fast_shutter(d):
     # MR: for test only, remove later:
     return
@@ -332,7 +337,7 @@ def xfp_plan_fast_shutter(d):
     yield from bp.mv(dg, exp_time)
     #open the protective shutter
     yield from bp.abs_set(shutter, 'Open', wait=True)
-  
+
     #fire the fast shutter and wait for it to close again
 
     yield from bp.mv(dg.fire, 1)
@@ -340,9 +345,10 @@ def xfp_plan_fast_shutter(d):
 
     #close the protective shutter
     yield from bp.abs_set(shutter, 'Close', wait=True)
-    
+
     return (yield from bp.count([msh, mshlift, # pin_diode
                                 ], md=d))
+
 
 h_pos = np.array(
       [[-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
