@@ -255,7 +255,7 @@ class XFPSampleSelector:
     def walk_values(self):
         return [{'exposure': d.exposure,
                  'position': d.position,
-                 **d.md} for d in self.controls
+                 **d.md} for d in self.slots
                 if d.enabled]
 
     def show(self):
@@ -265,7 +265,7 @@ class XFPSampleSelector:
         return self.window.close()
 
     def toggle_all(self, state):
-        for column in self.controls:
+        for column in self.slots:
             column.cb.setChecked(state)
 
     def align_ht(self):
