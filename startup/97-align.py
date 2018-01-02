@@ -63,8 +63,8 @@ def align_msh(h_pos, v_pos, *, md=None):
 def _align_ht(*args, **kwargs):
     ...
 
-def align_ht(h_start=-2.10100000e+02, v_start=8.6,
-             h_init_slot=2, v_init_slot=0,
+def align_ht(h_start=-31.5, v_start=-49.5,
+             h_init_slot=0, v_init_slot=0,
              n_cols=8, n_rows=12,
              h_spacing=9.0, v_spacing=9.0):
     """Align high-throughput sample holder.
@@ -83,7 +83,10 @@ def align_ht(h_start=-2.10100000e+02, v_start=8.6,
     for i in range(n_rows):
         coords.append([])
         for j in range(n_cols):
-            coords[-1].append([(j-h_init_slot)*h_spacing, (i-v_init_slot)*v_spacing])
+            coords[-1].append([
+                h_start + (j - h_init_slot) * h_spacing,
+                v_start + (i - v_init_slot) * v_spacing,
+            ])
 
     coords = np.array(coords)
 

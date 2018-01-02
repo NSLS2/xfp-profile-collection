@@ -259,6 +259,9 @@ class XFPSampleSelector:
         # Slots:
         slots_layout = QtWidgets.QGridLayout()
 
+        self.rows = rows
+        self.cols = cols
+
         self.slots = []
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
@@ -272,7 +275,7 @@ class XFPSampleSelector:
         controls_layout = QtWidgets.QVBoxLayout()
 
         self.path_select = path = DirectorySelector('CSV path')
-        self.re_controls = RunEngineControls(RE, self, motors=[msh, mshlift])
+        self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
         controls_layout.addWidget(path.widget)
         controls_layout.addWidget(self.re_controls.widget)
@@ -326,29 +329,35 @@ class XFPSampleSelector:
         print(file_name)
 
         uid_list = []
-        base_md = {'plan_name': 'msh'}
+        base_md = {'plan_name': 'ht'}
         if reason:
             base_md['reason'] = reason
 
         for gui_d in self.walk_values():
+            print(f'gui_d: {gui_d}')
             d = dict(base_md)
             d.update(gui_d)
 
-            yield from bp.abs_set(msh,
-                                  self.h_pos[d['position']],
-                                  group='msh')
-            yield from bp.abs_set(mshlift,
-                                  self.v_pos[d['position']],
-                                  group='msh')
+            row_num, col_num = np.unravel_index(gui_d['position'], (self.rows, self.cols))
 
-            # awlays want to wait at least 3 seconds
+            print(f"d: {d}")
+            print(f"self.h_pos[{row_num}, {col_num}]: {self.h_pos[row_num, col_num]}")
+            print(f"self.v_pos[{row_num}, {col_num}]: {self.v_pos[row_num, col_num]}")
+
+            yield from bp.abs_set(ht.x,
+                                  self.h_pos[row_num, col_num],
+                                  group='ht')
+            yield from bp.abs_set(ht.y,
+                                  self.v_pos[row_num, col_num],
+                                  group='ht')
+
+            # always want to wait at least 3 seconds
             yield from bp.sleep(3)
-            yield from bp.wait('msh')
+            yield from bp.wait('ht')
 
-            self.re_controls.info_label.setText(motors_positions([msh, mshlift]))
+            self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
             uid = (yield from xfp_plan_fast_shutter(d))
-            #uid = (yield from bp.count([msh, mshlift], md=d))
 
             if uid is not None:
                 uid_list.append(uid)
@@ -361,7 +370,8 @@ class XFPSampleSelector:
             if file_name is not None:
                 tbl.to_csv(file_name, index=False)
 
-        yield from bp.mv(msh, -275)
+        yield from bp.mv(ht.x, 0)
+        yield from bp.mv(ht.y, 0)
 
 
 def motors_positions(motors):
@@ -375,7 +385,7 @@ def motors_positions(motors):
 
 def xfp_plan_fast_shutter(d):
     # MR: for test only, remove later:
-    return
+    # return
     exp_time = d['exposure']/1000
 
     yield from bp.mv(dg, exp_time)
@@ -390,10 +400,14 @@ def xfp_plan_fast_shutter(d):
     #close the protective shutter
     yield from bp.abs_set(shutter, 'Close', wait=True)
 
-    return (yield from bp.count([msh, mshlift, # pin_diode
+    return (yield from bp.count([ht.x, ht.y, # pin_diode
                                 ], md=d))
 
+positions = align_ht()
+h_pos = positions[:, :, 0]
+v_pos = positions[:, :, 1]
 
+'''
 h_pos = np.array(
       [[-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
        [-18.,  -9.,   0.,   9.,  18.,  27.,  36.,  45.],
@@ -421,6 +435,7 @@ v_pos = np.array(
        [ 81.,  81.,  81.,  81.,  81.,  81.,  81.,  81.],
        [ 90.,  90.,  90.,  90.,  90.,  90.,  90.,  90.],
        [ 99.,  99.,  99.,  99.,  99.,  99.,  99.,  99.]])
+'''
 
 try:
     HTgui.close()
