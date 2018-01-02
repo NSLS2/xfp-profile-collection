@@ -6,6 +6,8 @@ plt.ion()
 from bluesky.utils import install_qt_kicker
 install_qt_kicker()
 
+from itertools import cycle
+
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 
 
@@ -27,7 +29,32 @@ class ColumnWidget:
         notes = self.notes = QtWidgets.QTextEdit(''.format(j))
 
         indicator = self.indicator = QtWidgets.QPushButton('Test')
-        indicator.setStyleSheet('QPushButton {background-color: red; color: white}')
+        # indicator.setStyleSheet ('background-color: red;border-style: outset;border-width: 2px;border-radius: 200px;border-color: beige;font: bold 14px;min-width: 10em;padding: 6px;')
+
+        width = self.width = 50
+        color = self.color = 'green'
+
+        colors = ['blue', 'red', 'green']
+        self.cycler = cycle(colors)
+
+        indicator.setStyleSheet('''QPushButton {{
+                background-color: {color};
+                color: white;
+                border-style: solid;
+                border-width: 1px;
+                border-radius: {radius}px;
+                border-color: {color};
+                max-width: {width}px;
+                max-height: {width}px;
+                min-width: {width}px;
+                min-height: {width}px;
+            }}'''.format(width=width, radius=width/2, color=color))
+        indicator.clicked.connect(self.change_color)
+
+        # indicator.setFixedHeight(30)
+        # indicator.setFixedWidth(30)
+
+        # label.setStyleSheet('QLabel {background-color: green; color: white}')
 
         cb.toggled.connect(sb.setEnabled)
         cb.toggled.connect(le.setEnabled)
@@ -40,6 +67,22 @@ class ColumnWidget:
         f_layout.addRow('', indicator)
 
         cb.setLayout(f_layout)
+
+    def change_color(self):
+        color = next(self.cycler)
+        width = self.width
+        return self.indicator.setStyleSheet(f'''QPushButton {{
+                background-color: {color};
+                color: white;
+                border-style: solid;
+                border-width: 1px;
+                border-radius: {width/2}px;
+                border-color: {color};
+                max-width: {width}px;
+                max-height: {width}px;
+                min-width: {width}px;
+                min-height: {width}px;
+            }}''')
 
     @property
     def enabled(self):
@@ -128,30 +171,26 @@ class RunEngineControls:
         button_layout = QtWidgets.QHBoxLayout()
         button_widget.setLayout(button_layout)
 
-        label = QtWidgets.QLabel('Idle')
+        self.label = label = QtWidgets.QLabel('Idle')
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet('QLabel {background-color: green; color: white}')
         button_layout.addWidget(label)
 
         # Run button to execute RE
-        button_run = QtWidgets.QPushButton('Run')
+        self.button_run = button_run = QtWidgets.QPushButton('Run')
         button_run.clicked.connect(self.run)
         button_layout.addWidget(button_run)
 
         # Run button to execute RE
-        button_pause = QtWidgets.QPushButton('Pause')
+        self.button_pause = button_pause = QtWidgets.QPushButton('Pause')
         button_pause.clicked.connect(self.pause)
         button_layout.addWidget(button_pause)
 
-        info_label = QtWidgets.QLabel('Motors info')
+        self.info_label = info_label = QtWidgets.QLabel('Motors info')
         info_label.setAlignment(QtCore.Qt.AlignLeft)
         # label.setStyleSheet('QLabel {background-color: green; color: white}')
         button_layout.addWidget(info_label)
 
-        self.label = label
-        self.info_label = info_label
-        self.button_run = button_run
-        self.button_pause = button_pause
         self.RE.state_hook = self.handle_state_change
         self.handle_state_change(self.RE.state, None)
 
@@ -168,6 +207,12 @@ class RunEngineControls:
             self.RE.stop()
 
     def handle_state_change(self, new, old):
+        # color = 'gray'
+        # state = 'unknown'
+        # button_run_enabled = False
+        # button_pause_enabled = True
+        # button_run_text = 'Run'
+        # button_pause_text = 'Pause'
         if new == 'idle':
             state = 'Idle'
             color = 'green'
@@ -194,7 +239,6 @@ class RunEngineControls:
         self.label.setText(state)
 
         self.info_label.setText(motors_positions(self.motors)) # TODO
-
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
         self.button_pause.setEnabled(button_pause_enabled)
