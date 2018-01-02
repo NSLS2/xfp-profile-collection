@@ -420,6 +420,12 @@ class Table1(Device):
 
 tbl1 = Table1('XF:17BMA-ES:1{Tbl:1-Ax:', name='tbl1')
 
+class HT(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+ht = HT('XF:17BMA-ES:2{Stg:7-Ax:', name='ht')
+
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
 #feslits2 = InBottomSlits('FE:C17B-OP{Slt:2-Ax:', name='feslits2')
