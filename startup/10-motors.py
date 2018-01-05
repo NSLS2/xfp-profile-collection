@@ -370,7 +370,7 @@ class SR630(Device):
     unit = Cpt(EpicsSignalRO, 'rCurr_Units', string=True)
 
 tcm1 = SR630('XF:17BMA-ES:2{TCM:1}', name='tcm1', 
-	read_attrs=['val'], configuration_attrs=['unit', 'channel'])
+        read_attrs=['val'], configuration_attrs=['unit', 'channel'])
 #pin_diode = SR630('XF:17BMA-ES:2{TCM:1}', name='pin_diode')
 
 
@@ -381,7 +381,7 @@ class QuadEM(Device):
 #    ch4 = Cpt(EpicsSignalRO, 'EM180:Current4:MeanValue_RBV')
 
 quad = QuadEM('XF:17BM-BI{EM:1}', name='quad', 
-	read_attrs=['ch3'])
+        read_attrs=['ch3'])
 
 pin_diode = QuadEM('XF:17BM-BI{EM:1}', name='pin_diode')
 
@@ -419,6 +419,19 @@ class Table1(Device):
     z = Cpt(EpicsMotor, 'Z}Mtr')
 
 tbl1 = Table1('XF:17BMA-ES:1{Tbl:1-Ax:', name='tbl1')
+
+class HT(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+ht = HT('XF:17BMA-ES:2{Stg:7-Ax:', name='ht')
+
+class PPS_Shutter(Device):
+    pps_open = Cpt(EpicsSignal, 'Opn-Cmd')
+    # pps_close = Cpt(EpicsSignal, 'In-Cmd')
+
+pps_shutter = PPS_Shutter('XF:17BM-PPS{Sh:FE}Cmd:', name='pps_shutter')
+
 
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
