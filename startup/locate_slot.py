@@ -1,5 +1,38 @@
-from string import ascii_uppercase
 import numpy as np
+from string import ascii_uppercase
+
+
+def find_2d_index(arr, idx_ln):
+    """TODO: add docstrings
+
+       arr: alpha-numeric 2D-array
+    """
+    return np.argwhere(arr==idx_ln.upper())[0]
+
+
+def find_1d_index(arr, idx_ln):
+    """TODO: add docstrings
+
+       arr: alpha-numeric 2D-array
+    """
+    return np.argwhere(np.ravel(arr)==idx_ln.upper())[0][0]
+
+
+def find_slot_by_2d_index(arr, idx_2d):
+    """TODO: add docstrings
+
+       arr: alpha-numeric 2D-array
+    """
+    return arr[tuple(idx_2d)]
+
+
+def find_slot_by_1d_index(arr, idx_1d):
+    """TODO: add docstrings
+
+       arr: alpha-numeric 2D-array
+    """
+    return np.ravel(arr)[idx_1d]
+
 
 
 NUM_COLS = 8
@@ -13,16 +46,4 @@ n = np.array([numbers] * NUM_COLS).T
 
 ln = np.core.defchararray.add(l, n)
 
-
-def find_2d_index(arr, idx_ln):
-    return np.argwhere(arr==idx_ln)[0]
-
-def find_1d_index(arr, idx_ln):
-    return np.argwhere(np.ravel(arr)==idx_ln)[0][0]
-
-def find_element_by_1d_index(arr, idx_1d):
-    return np.ravel(arr)[idx_1d]
-
-def find_element_by_2d_index(arr, idx_2d):
-    return arr[tuple(idx_2d)]
 
