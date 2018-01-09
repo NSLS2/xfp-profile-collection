@@ -3,3 +3,4 @@ pid/
 db/
 log/
 history.sqlite
+.*.py
