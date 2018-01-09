@@ -1,7 +1,6 @@
 from ophyd import (EpicsMotor, Device,
                    Component as Cpt, EpicsSignal,
                    EpicsSignalRO, DeviceStatus)
-import bluesky.plans as bp
 import time
 import datetime
 

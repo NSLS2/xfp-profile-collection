@@ -1,8 +1,5 @@
-import bluesky.plans as bp
-try:
-    from bluesky.callbacks.scientific import plot_peak_stats
-except ImportError:
-    from bluesky.callbacks.mpl_plotting import plot_peak_stats
+from bluesky.callbacks.mpl_plotting import plot_peak_stats
+
 
 def _align(dir_name, mtr,
            start, stop, num_points, *,
@@ -15,15 +12,15 @@ def _align(dir_name, mtr,
            'plan_name': '_align',
            'dir_name': dir_name}
     _md.update(md or {})
-    yield from bp.mv(shutter, 'Open')
+    yield from bps.mv(shutter, 'Open')
     
-    r = yield from bp.subs_wrapper(
+    r = yield from bpp.subs_wrapper(
             bp.relative_scan([quad, mshlift, msh],
                              mtr,
                              start, stop, num_points,
                              md=_md),
         [lp, ps])
-    yield from bp.mv(shutter, 'Close')
+    yield from bps.mv(shutter, 'Close')
     
     return (r, ps)
 
@@ -36,8 +33,8 @@ def align_msh(h_pos, v_pos, *, md=None):
         _md = {'slot': j}
         _md.update(md or {})
 
-        yield from bp.mv(msh, h_pos[j])
-        yield from bp.mv(mshlift, v_pos[j])
+        yield from bps.mv(msh, h_pos[j])
+        yield from bps.mv(mshlift, v_pos[j])
         
         uid, ps = yield from _align('horizontal',
                                     msh,
@@ -48,7 +45,7 @@ def align_msh(h_pos, v_pos, *, md=None):
                 j,ps.com-h_pos[j]))
             h_pos[j] = ps.com
 
-        yield from bp.mv(msh, h_pos[j])
+        yield from bps.mv(msh, h_pos[j])
         
         uid, ps = yield from _align('vertical',
                                     mshlift,
@@ -104,7 +101,7 @@ def align_ht(h_start=-31.5, v_start=-49.5,
                 j, ps.com-h_pos[j]))
         h_pos[j] = ps.com
 
-    # yield from bp.mv(msh, h_pos[j])
+    # yield from bps.mv(msh, h_pos[j])
     
     uid, ps = yield from _align_('vertical',
                                 mshlift,

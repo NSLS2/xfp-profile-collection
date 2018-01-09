@@ -1,17 +1,9 @@
-import numpy as np
-
-#TODO(mr): remove later, for dev/tests only:
-import matplotlib.pyplot as plt
 plt.ion()
 from bluesky.utils import install_qt_kicker
 install_qt_kicker()
 
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 
-
-import bluesky.plans as bp
-import pandas as pd
-import os
 
 class ColumnWidget:
     def __init__(self, j):
@@ -292,21 +284,20 @@ class XFPSampleSelector:
             d = dict(base_md)
             d.update(gui_d)
             
-            yield from bp.abs_set(msh,
-                                  self.h_pos[d['position']],
-                                  group='msh')
-            yield from bp.abs_set(mshlift,
-                                  self.v_pos[d['position']],
-                                  group='msh')
+            yield from bps.abs_set(msh,
+                                   self.h_pos[d['position']],
+                                   group='msh')
+            yield from bps.abs_set(mshlift,
+                                   self.v_pos[d['position']],
+                                   group='msh')
 
             # awlays want to wait at least 3 seconds
-            yield from bp.sleep(3)	    
-            yield from bp.wait('msh')
+            yield from bps.sleep(3)	    
+            yield from bps.wait('msh')
 
             self.re_controls.info_label.setText(motors_positions([msh, mshlift]))
 
             uid = (yield from xfp_plan_fast_shutter(d))
-            #uid = (yield from bp.count([msh, mshlift], md=d))
             
             if uid is not None:
                 uid_list.append(uid)
@@ -319,24 +310,24 @@ class XFPSampleSelector:
             if file_name is not None:
                 tbl.to_csv(file_name, index=False)
 
-        yield from bp.mv(msh, -275)
+        yield from bps.mv(msh, -275)
             
 def xfp_plan_fast_shutter(d):
     # MR: for test only, remove later:
     return
     exp_time = d['exposure']/1000
 
-    yield from bp.mv(dg, exp_time)
+    yield from bps.mv(dg, exp_time)
     #open the protective shutter
-    yield from bp.abs_set(shutter, 'Open', wait=True)
+    yield from bps.abs_set(shutter, 'Open', wait=True)
   
     #fire the fast shutter and wait for it to close again
 
-    yield from bp.mv(dg.fire, 1)
-    yield from bp.sleep(exp_time*1.1)
+    yield from bps.mv(dg.fire, 1)
+    yield from bps.sleep(exp_time*1.1)
 
     #close the protective shutter
-    yield from bp.abs_set(shutter, 'Close', wait=True)
+    yield from bps.abs_set(shutter, 'Close', wait=True)
     
     return (yield from bp.count([msh, mshlift, # pin_diode
                                 ], md=d))
