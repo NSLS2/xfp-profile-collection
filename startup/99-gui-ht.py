@@ -1,14 +1,13 @@
 plt.ion()
 from bluesky.utils import install_qt_kicker
 install_qt_kicker()
-
 from itertools import cycle
-
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+from locate_slot import LetterNumberLocator
 
 
 class ColumnWidget:
-    def __init__(self, j):
+    def __init__(self, j, data=None):
         self._position = j
         cb = self.cb = QtWidgets.QGroupBox('Position {}'.format(j))
         cb.setCheckable(True)
@@ -17,13 +16,18 @@ class ColumnWidget:
         sb.setMinimum(10)
         sb.setMaximum(20000)
         le = self.le = QtWidgets.QLineEdit('sample {}'.format(j))
-        notes = self.notes = QtWidgets.QTextEdit(''.format(j))
+        self.notes = notes = QtWidgets.QTextEdit(''.format(j))
+        self.data = data
 
-        indicator = self.indicator = QtWidgets.QPushButton('Test')
+        if data is not None:
+            label_text = f"{data['Location']}\n----\n{data['Slot (0-95)']}"
+        else:
+            label_text = ''
+        indicator = self.indicator = QtWidgets.QPushButton(label_text)
         # indicator.setStyleSheet ('background-color: red;border-style: outset;border-width: 2px;border-radius: 200px;border-color: beige;font: bold 14px;min-width: 10em;padding: 6px;')
 
         width = self.width = 50
-        color = self.color = 'green'
+        color = self.color = 'gray'
 
         colors = ['blue', 'red', 'green']
         self.cycler = cycle(colors)
@@ -62,6 +66,9 @@ class ColumnWidget:
     def change_color(self):
         color = next(self.cycler)
         width = self.width
+        print()
+        for k, v in self.data.items():
+            print(f'{k:20s}: {v}')
         return self.indicator.setStyleSheet(f'''QPushButton {{
                 background-color: {color};
                 color: white;
@@ -198,12 +205,6 @@ class RunEngineControls:
             self.RE.stop()
 
     def handle_state_change(self, new, old):
-        # color = 'gray'
-        # state = 'unknown'
-        # button_run_enabled = False
-        # button_pause_enabled = True
-        # button_run_text = 'Run'
-        # button_pause_text = 'Pause'
         if new == 'idle':
             state = 'Idle'
             color = 'green'
@@ -226,10 +227,14 @@ class RunEngineControls:
             button_run_text = 'Run'
             button_pause_text = 'Pause'
 
+        width = 60
+        height = 60
+        self.label.setFixedHeight(width)
+        self.label.setFixedWidth(height)
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
         self.label.setText(state)
 
-        self.info_label.setText(motors_positions(self.motors)) # TODO
+        self.info_label.setText(f'Motor position:\n\n{motors_positions(self.motors)}')
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
         self.button_pause.setEnabled(button_pause_enabled)
@@ -254,9 +259,14 @@ class XFPSampleSelector:
         self.cols = cols
 
         self.slots = []
+
+        self.excel_path = excel_path =f"{os.environ['HOME']}/.ipython/profile_collection/startup/examples/example.xlsx"
+        self.excel_data = excel_data = pd.read_excel(excel_path)
+        self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
+
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
-            cw = ColumnWidget(j)
+            cw = ColumnWidget(j, data=self.excel_data.iloc[j, :])  # label=self.letter_number.find_slot_by_1d_index(j))
             slots_layout.addWidget(cw.cb, r, c)
             self.slots.append(cw)
 
@@ -265,7 +275,7 @@ class XFPSampleSelector:
         # Controls:
         controls_layout = QtWidgets.QVBoxLayout()
 
-        self.path_select = path = DirectorySelector('CSV path')
+        self.path_select = path = DirectorySelector('Export CSV path')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
         controls_layout.addWidget(path.widget)
@@ -375,8 +385,6 @@ def motors_positions(motors):
 
 
 def xfp_plan_fast_shutter(d):
-    # MR: for test only, remove later:
-    # return
     exp_time = d['exposure']/1000
 
     yield from bps.mv(dg, exp_time)
@@ -397,8 +405,6 @@ def xfp_plan_fast_shutter(d):
 positions = align_ht()
 h_pos = positions[:, :, 0]
 v_pos = positions[:, :, 1]
-
-excel_data = pd.read_excel('examples/example.xlsx')
 
 try:
     HTgui.close()
