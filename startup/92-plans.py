@@ -17,7 +17,7 @@ def timed_shutter(exp_time, *, md=None):
         
         # open the shutter
         yield from bps.abs_set(shutter, 'Open', wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print('Shutter opened')
         print("({}) Exposing for {:.2f} s".format(datetime.datetime.now().strftime(_time_fmtstr), exp_time))
@@ -25,10 +25,10 @@ def timed_shutter(exp_time, *, md=None):
        # wait
         yield from bps.sleep(exp_time)
 
-       # close the shutter
+        # close the shutter
         yield from bps.abs_set(shutter, 'Close', wait=True)
         print('closed shutter')
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
     def clean_up():
         yield from bps.abs_set(shutter, 'Close', wait=True)
