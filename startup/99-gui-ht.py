@@ -260,7 +260,7 @@ class XFPSampleSelector:
 
         self.slots = []
 
-        self.excel_path = excel_path =f"{os.environ['HOME']}/.ipython/profile_collection/startup/examples/example.xlsx"
+        self.excel_path = excel_path = f"{os.environ['HOME']}/.ipython/profile_collection/startup/examples/example.xlsx"
         self.excel_data = excel_data = pd.read_excel(excel_path)
         self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
 
@@ -317,7 +317,7 @@ class XFPSampleSelector:
             column.cb.setChecked(state)
 
     def align_ht(self):
-        print(align_ht())
+        RE(align_ht())
 
     def plan(self, file_name=None):
         reason = self.path_select.short_desc.displayText()
@@ -402,14 +402,15 @@ def xfp_plan_fast_shutter(d):
     return (yield from bp.count([ht.x, ht.y, # pin_diode
                                 ], md=d))
 
-positions = align_ht()
-h_pos = positions[:, :, 0]
-v_pos = positions[:, :, 1]
-
 try:
     HTgui.close()
 except NameError:
     pass
-HTgui = XFPSampleSelector(h_pos, v_pos)
+
+positions = default_coords()
+x_pos = positions[:, 0]
+y_pos = positions[:, 1]
+
+HTgui = XFPSampleSelector(x_pos, y_pos)
 
 
