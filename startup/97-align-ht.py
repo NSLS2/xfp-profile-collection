@@ -44,8 +44,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
         v_pos[j] = ps.com
     '''
     HT_COORDS = default_coords(x_start=PS_X.com, y_start=PS_Y.com)
-    df = pd.DataFrame(HT_COORDS, columns=['x', 'y'])
-    df.to_csv(HT_COORDS_FILE, float_format='%.2f')
+    HT_COORDS.to_csv(HT_COORDS_FILE, float_format='%.2f')
 
 
 def default_coords(x_start=HT_X_START, y_start=HT_Y_START, 
@@ -74,7 +73,7 @@ def default_coords(x_start=HT_X_START, y_start=HT_Y_START,
             ])
     ht_coords = np.array(ht_coords)
     ht_coords = np.reshape(ht_coords, (n_cols*n_rows, 2))
-    return ht_coords
+    return pd.DataFrame(ht_coords, columns=['x', 'y'])
 
 
 def _align_ht(dir_name, mtr,

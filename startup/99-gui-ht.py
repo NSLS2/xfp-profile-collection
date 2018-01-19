@@ -403,7 +403,11 @@ try:
 except NameError:
     pass
 
-HT_COORDS = pd.read_csv(HT_COORDS_FILE, index_col=0)
+try:
+    HT_COORDS = pd.read_csv(HT_COORDS_FILE, index_col=0)
+except:
+    HT_COORDS = default_coords()
+
 x_pos = HT_COORDS['x']
 y_pos = HT_COORDS['y']
 
