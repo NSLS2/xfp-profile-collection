@@ -4,7 +4,7 @@ from bluesky.callbacks.fitting import PeakStats
 
 HT_X_START = 8.72
 HT_Y_START = -89.72
-HT_COORDS_FILE = 'ht_coords.csv'
+HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
@@ -43,8 +43,8 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
              j, ps.com - v_pos[j]))
         v_pos[j] = ps.com
     '''
-    ht_coords = default_coords(x_start=PS_X.com, y_start=PS_Y.com)
-    df = pandas.DataFrame(ht_coords, columns=['x', 'y'])
+    HT_COORDS = default_coords(x_start=PS_X.com, y_start=PS_Y.com)
+    df = pd.DataFrame(HT_COORDS, columns=['x', 'y'])
     df.to_csv(HT_COORDS_FILE, float_format='%.2f')
 
 

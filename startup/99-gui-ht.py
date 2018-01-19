@@ -260,7 +260,7 @@ class XFPSampleSelector:
 
         self.slots = []
 
-        self.excel_path = excel_path = f"{os.environ['HOME']}/.ipython/profile_collection/startup/examples/example.xlsx"
+        self.excel_path = excel_path = str(PROFILE_STARTUP_PATH / 'examples/example.xlsx')
         self.excel_data = excel_data = pd.read_excel(excel_path)
         self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
 
@@ -335,21 +335,19 @@ class XFPSampleSelector:
             base_md['reason'] = reason
 
         for gui_d in self.walk_values():
-            print(f'gui_d: {gui_d}')
             d = dict(base_md)
             d.update(gui_d)
 
             row_num, col_num = np.unravel_index(gui_d['position'], (self.rows, self.cols))
 
-            print(f"d: {d}")
-            print(f"self.h_pos[{row_num}, {col_num}]: {self.h_pos[row_num, col_num]}")
-            print(f"self.v_pos[{row_num}, {col_num}]: {self.v_pos[row_num, col_num]}")
+            print(f"Info: {d}")
+            print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
 
             yield from bps.abs_set(ht.x,
-                                   self.h_pos[row_num, col_num],
+                                   self.h_pos[gui_d['position']],
                                    group='ht')
             yield from bps.abs_set(ht.y,
-                                   self.v_pos[row_num, col_num],
+                                   self.v_pos[gui_d['position']],
                                    group='ht')
 
             # always want to wait at least 3 seconds
@@ -359,7 +357,7 @@ class XFPSampleSelector:
             self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
             uid = (yield from xfp_plan_fast_shutter(d))
-
+            print(f'UID from xfp_plan_fast_shutter(): {uid}')
             if uid is not None:
                 uid_list.append(uid)
 
@@ -371,8 +369,8 @@ class XFPSampleSelector:
             if file_name is not None:
                 tbl.to_csv(file_name, index=False)
 
-        yield from bps.mv(ht.x, 0)
-        yield from bps.mv(ht.y, 0)
+        yield from bps.mv(ht.x, -96)
+        yield from bps.mv(ht.y, -50)
 
 
 def motors_positions(motors):
@@ -386,30 +384,28 @@ def motors_positions(motors):
 
 def xfp_plan_fast_shutter(d):
     exp_time = d['exposure']/1000
-
     yield from bps.mv(dg, exp_time)
-    #open the protective shutter
+
+    # open the protective shutter
     yield from bps.abs_set(shutter, 'Open', wait=True)
 
-    #fire the fast shutter and wait for it to close again
-
+    # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg.fire, 1)
     yield from bps.sleep(exp_time*1.1)
 
-    #close the protective shutter
+    # close the protective shutter
     yield from bps.abs_set(shutter, 'Close', wait=True)
 
-    return (yield from bp.count([ht.x, ht.y, # pin_diode
-                                ], md=d))
+    return (yield from bp.count([ht.x, ht.y], md=d))
 
 try:
     HTgui.close()
 except NameError:
     pass
 
-positions = default_coords()
-x_pos = positions[:, 0]
-y_pos = positions[:, 1]
+HT_COORDS = pd.read_csv(HT_COORDS_FILE, index_col=0)
+x_pos = HT_COORDS['x']
+y_pos = HT_COORDS['y']
 
 HTgui = XFPSampleSelector(x_pos, y_pos)
 
