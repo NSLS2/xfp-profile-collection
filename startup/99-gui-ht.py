@@ -44,7 +44,7 @@ class ColumnWidget:
                 min-width: {width}px;
                 min-height: {width}px;
             }}'''.format(width=width, radius=width/2, color=color))
-        indicator.clicked.connect(self.change_color)
+        indicator.clicked.connect(self.input_dialog)
 
         # indicator.setFixedHeight(30)
         # indicator.setFixedWidth(30)
@@ -62,6 +62,14 @@ class ColumnWidget:
         f_layout.addRow('', indicator)
 
         cb.setLayout(f_layout)
+
+    def input_dialog(self):
+        self.dialog_window = dialog_window = QtWidgets.QLabel()
+        dialog_window.show()
+        text, ok = QtWidgets.QInputDialog.getDouble(dialog_window, 'Parameters', 'Exposure:', 10)
+        if ok:
+            self.indicator.setText(str(text))
+            self.change_color()
 
     def change_color(self):
         color = next(self.cycler)
@@ -95,7 +103,7 @@ class ColumnWidget:
     def position(self):
         return self._position
 
-    @property
+    property
     def exposure(self):
         return self.sb.value()
 
@@ -276,9 +284,11 @@ class XFPSampleSelector:
         controls_layout = QtWidgets.QVBoxLayout()
 
         self.path_select = path = DirectorySelector('Export CSV path')
+        self.import_file = import_file = DirectorySelector('Import Excel file')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
-        controls_layout.addWidget(path.widget)
+        controls_layout.addWidget(self.path_select.widget)
+        controls_layout.addWidget(self.import_file.widget)
         controls_layout.addWidget(self.re_controls.widget)
 
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
