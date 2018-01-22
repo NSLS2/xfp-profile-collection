@@ -7,7 +7,7 @@ HT_Y_START = -89.72
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 
 
-def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
+def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
     """Align high-throughput sample holder.
 
         x_start : horizontal start position
@@ -15,15 +15,14 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
         md : optional metadata information
     """
 
-    yield from bps.mv(ht.x, x_start)
-    yield from bps.mv(ht.y, y_start)
+    yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
 
     # Find uid and peak stats for horizontal calibration:
     global PS_X, PS_Y, HT_COORDS
 
     uid, PS_X = yield from _align_ht('horizontal', ht.x,
-                                   -3, 3, 61,
-                                   md=md)
+                                     x_start-offset, x_start+offset, 61,
+                                     md=md)
     '''
     if uid is not None:
         print('slot {} h shift by {}'.format(
@@ -32,11 +31,11 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None):
     '''
 
     # Move hor. position to COM before we scan vertical one:
-    yield from bps.mv(ht.x, PS_X.com)
+    yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
     
     uid, PS_Y = yield from _align_ht('vertical', ht.y,
-                                   -3, 3, 61,
-                                   md=md)
+                                     y_start-offset, y_start+offset, 61,
+                                     md=md)
     '''
     if uid is not None:
         print('slot {} v shift by {}'.format(
@@ -85,18 +84,18 @@ def _align_ht(dir_name, mtr,
     
     _md = {'purpose': 'table alignment',
            'plan_name': '_align_ht',
-           'dir_name': dir_name,
-           'ps': {k: v for k, v in ps.__dict__.items() if not k.startswith('_')}}
+           'dir_name': dir_name}
     _md.update(md or {})
     yield from bps.mv(shutter, 'Open')
     
-    r = yield from bpp.subs_wrapper(
-            bp.relative_scan([tcm1, ht.y, ht.x],
-                             mtr,
-                             start, stop, num_points,
-                             md=_md),
-                             [lp, ps])
+    uid = yield from bpp.subs_wrapper(
+            bp.scan([tcm1],
+                     mtr,
+                     start, stop, num_points,
+                     md=_md),
+            [lp, ps])
     print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
+
     yield from bps.mv(shutter, 'Close')
-    return (r, ps)
+    return (uid, ps)
 
