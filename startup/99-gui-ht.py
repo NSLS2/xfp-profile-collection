@@ -6,42 +6,44 @@ from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 from locate_slot import LetterNumberLocator
 
 
+COLOR_SUCCESS = 'green'
+COLOR_RUNNING = 'red'
+COLOR_SELECTED = '#007dff'  # blue
+COLOR_SKIPPED = 'gray'
+
+
 class ColumnWidget:
     def __init__(self, j, data=None):
         self._position = j
-
-        self.cb = cb = QtWidgets.QGroupBox('Position {}'.format(j))
-        cb.setCheckable(True)
-
-        self.sb = sb = QtWidgets.QDoubleSpinBox()
-        sb.setValue(10)
-        sb.setMinimum(0)
-        sb.setMaximum(20000)
-
-        self.le = le = QtWidgets.QLineEdit('sample {}'.format(j))
-
-        self.notes = notes = QtWidgets.QTextEdit(''.format(j))
-
         self.data = data
 
-        self.label_text = label_text = ''
+        self.cb = QtWidgets.QGroupBox(f'Slot: {j}')
+        self.cb.setCheckable(True)
+
+        self.sb = QtWidgets.QDoubleSpinBox()
+        self.sb.setValue(10)
+        self.sb.setMinimum(0)
+        self.sb.setMaximum(20000)
+
+        self.le = QtWidgets.QLineEdit(f'sample {j}')
+
+        self.notes = QtWidgets.QTextEdit(f'{j}')
+
+        self.label_text = ''
 
         if self.data is not None:
             self.label_text = f"Slot: {data['Location']} / {data['Slot (0-95)']}"
             self.cb.setTitle(self.label_text)
-            # label_text = f"{data['Location']}\n----\n{data['Slot (0-95)']}"
-            self.le.setText(data['Sample name'])
-            self.notes.setText(data['Notes'])
-            self.sb.setValue(float(data['Exposure time (ms)']))
+            self.le.setText(self.data['Sample name'])
+            self.notes.setText(self.data['Notes'])
+            self.sb.setValue(float(self.data['Exposure time (ms)']))
 
-        self.indicator = indicator = QtWidgets.QPushButton()
+        self.indicator = QtWidgets.QPushButton()
         # indicator.setStyleSheet ('background-color: red;border-style: outset;border-width: 2px;border-radius: 200px;border-color: beige;font: bold 14px;min-width: 10em;padding: 6px;')
 
-        self.width = width = 30
-        self.color = color = 'green'
-
-        self.colors = colors = ['blue', 'red', 'green']
-        self.cycler = cycle(colors)
+        self.width = 30
+        self.color = color = COLOR_SELECTED
+        self.inactive_color = COLOR_SKIPPED
 
         self.indicator.setStyleSheet('''QPushButton {{
                 background-color: {color};
@@ -54,51 +56,69 @@ class ColumnWidget:
                 max-height: {width}px;
                 min-width: {width}px;
                 min-height: {width}px;
-            }}'''.format(width=width, radius=width/2, color=color))
+            }}'''.format(width=self.width, radius=self.width/2, color=self.color))
         self.indicator.clicked.connect(self.input_dialog)
-        tooltip_text = f"""\
-Slot: {self.label_text}
-Name: {self.le.text()}
-Exposure: {self.sb.value()}
-Notes: {self.notes.toPlainText()}\
-"""
-        self.indicator.setToolTip(tooltip_text)
-
-        # indicator.setFixedHeight(30)
-        # indicator.setFixedWidth(30)
-
-        # label.setStyleSheet('QLabel {background-color: green; color: white}')
+        self.tooltip_update()
 
         self.cb.toggled.connect(self.sb.setEnabled)
         self.cb.toggled.connect(self.le.setEnabled)
         self.cb.toggled.connect(self.state_changed)
-        self.cb.setChecked(True)
+        self.cb.setChecked(self.sb.value() > 0)
 
-        self.f_layout = QtWidgets.QFormLayout()
-        self.f_layout.addRow('', self.indicator)
+        self.cb_layout = QtWidgets.QHBoxLayout()
+        self.cb_layout.addWidget(self.indicator)
 
-        self.cb.setLayout(self.f_layout)
+        self.cb.setLayout(self.cb_layout)
+        self.cb.setAlignment(QtCore.Qt.AlignCenter)
 
-        self._cb = QtWidgets.QGroupBox()
-        self._cb.setTitle(self.label_text)
-        self._f_layout = QtWidgets.QFormLayout()
-        self._cb.setLayout(self._f_layout)
+        # Pop up window with parameters:
+        self.popup_window = QtWidgets.QMainWindow()
+        self.popup_window.setWindowTitle(f'{self.label_text}')
 
-        self._f_layout.addRow('Name', self.le)
-        self._f_layout.addRow('Exposure [ms]', self.sb)
-        self._f_layout.addRow('Notes', self.notes)
+        self.popup_widget = QtWidgets.QGroupBox()
+        self.popup_widget.setTitle(self.label_text)
+        self.popup_layout = QtWidgets.QFormLayout()
+        self.popup_widget.setLayout(self.popup_layout)
+        self.popup_window.setCentralWidget(self.popup_widget)
+
+        self.popup_layout.addRow('Name', self.le)
+        self.popup_layout.addRow('Exposure [ms]', self.sb)
+        self.popup_layout.addRow('Notes', self.notes)
+
+        # Update tooltip values:
+        self.sb.valueChanged.connect(self.tooltip_update)
+        self.le.textChanged.connect(self.tooltip_update)
+        self.notes.textChanged.connect(self.tooltip_update)
 
     def input_dialog(self):
-        self.change_color()
-        self._cb.show()
+        self.popup_window.show()
+        self.popup_window.activateWindow()
+
+    def tooltip_update(self):
+        self.tooltip_text = f"""\
+<table>
+    <tr>
+        <td>Slot:</td><td><b>{self.label_text}</b></td>
+    </tr>
+    <tr>
+        <td>Name:</td><td><b>{self.le.text()}</b></td>
+    </tr>
+    <tr>
+        <td>Exposure:</td><td><b>{self.sb.value()}</b></td>
+    </tr>
+    <tr>
+        <td>Notes:</td><td><i>{self.notes.toPlainText()}<i></td>
+    </tr>
+</table>
+"""
+        self.indicator.setToolTip(self.tooltip_text)
 
     def change_color(self, color=None):
         if not color:
-            color = next(self.cycler)
+            color = self.color
+        else:
+            self.color = color
         width = self.width
-        # print()
-        # for k, v in self.data.items():
-        #     print(f'{k:20s}: {v}')
         return self.indicator.setStyleSheet(f'''QPushButton {{
                 background-color: {color};
                 color: white;
@@ -114,9 +134,11 @@ Notes: {self.notes.toPlainText()}\
 
     def state_changed(self):
         if self.cb.isChecked():
-            self.change_color(color='green')
+            color = COLOR_SELECTED
         else:
-            self.change_color(color='gray')
+            color = COLOR_SKIPPED
+        self.change_color(color=color)
+        self.tooltip_update()
 
     @property
     def enabled(self):
@@ -203,7 +225,7 @@ class RunEngineControls:
         self.GUI = GUI
         self.motors = motors
 
-        self.widget = button_widget = QtWidgets.QWidget() 
+        self.widget = button_widget = QtWidgets.QWidget()
         button_layout = QtWidgets.QHBoxLayout()
         button_widget.setLayout(button_layout)
 
@@ -354,7 +376,7 @@ class XFPSampleSelector:
 
     def toggle_all(self, state):
         for column in self.slots:
-            column.cb.setChecked(state)
+            column.cb.setChecked(state and column.sb.value() > 0)
 
     def align_ht(self):
         RE(align_ht())
@@ -382,6 +404,7 @@ class XFPSampleSelector:
 
             print(f"Info: {d}")
             print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
+            self.slots[gui_d['position']].change_color(COLOR_RUNNING)
 
             yield from bps.abs_set(ht.x,
                                    self.h_pos[gui_d['position']],
@@ -395,6 +418,7 @@ class XFPSampleSelector:
             yield from bps.wait('ht')
 
             self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
+            self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
 
             uid = (yield from xfp_plan_fast_shutter(d))
             print(f'UID from xfp_plan_fast_shutter(): {uid}')
@@ -409,8 +433,7 @@ class XFPSampleSelector:
             if file_name is not None:
                 tbl.to_csv(file_name, index=False)
 
-        yield from bps.mv(ht.x, -96)
-        yield from bps.mv(ht.y, -50)
+        yield from bps.mv(ht.x, -96, ht.y, -50)
 
 
 def motors_positions(motors):
