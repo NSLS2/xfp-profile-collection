@@ -39,7 +39,6 @@ class ColumnWidget:
             self.sb.setValue(float(self.data['Exposure time (ms)']))
 
         self.indicator = QtWidgets.QPushButton()
-        # indicator.setStyleSheet ('background-color: red;border-style: outset;border-width: 2px;border-radius: 200px;border-color: beige;font: bold 14px;min-width: 10em;padding: 6px;')
 
         self.width = 30
         self.color = color = COLOR_SELECTED
@@ -47,7 +46,7 @@ class ColumnWidget:
 
         self.indicator.setStyleSheet('''QPushButton {{
                 background-color: {color};
-                color: white;
+                color: red;
                 border-style: solid;
                 border-width: 1px;
                 border-radius: {radius}px;
@@ -56,6 +55,7 @@ class ColumnWidget:
                 max-height: {width}px;
                 min-width: {width}px;
                 min-height: {width}px;
+                font-size: 36px;
             }}'''.format(width=self.width, radius=self.width/2, color=self.color))
         self.indicator.clicked.connect(self.input_dialog)
         self.tooltip_update()
@@ -64,6 +64,7 @@ class ColumnWidget:
         self.cb.toggled.connect(self.le.setEnabled)
         self.cb.toggled.connect(self.state_changed)
         self.cb.setChecked(self.sb.value() > 0)
+        self.indicator.setEnabled(True)
 
         self.cb_layout = QtWidgets.QHBoxLayout()
         self.cb_layout.addWidget(self.indicator)
@@ -87,6 +88,7 @@ class ColumnWidget:
 
         # Update tooltip values:
         self.sb.valueChanged.connect(self.tooltip_update)
+        self.sb.valueChanged.connect(self.check_zero)
         self.le.textChanged.connect(self.tooltip_update)
         self.notes.textChanged.connect(self.tooltip_update)
 
@@ -94,9 +96,21 @@ class ColumnWidget:
         self.popup_window.show()
         self.popup_window.activateWindow()
 
+    def check_zero(self):
+        if self.sb.value() == 0:
+            self.cb.setChecked(False)
+            self.state_changed()
+            self.indicator.setEnabled(True)
+
     def tooltip_update(self):
+        warning = ''
+        self.indicator.setText('')
+        if 0 <= self.sb.value() < 10:
+            self.indicator.setText('X')
+            warning = '<h1 style="color: red;">Minimum exposure time must be >= 10 ms</h1>'
+
         self.tooltip_text = f"""\
-<table>
+{warning}<table>
     <tr>
         <td>Slot:</td><td><b>{self.label_text}</b></td>
     </tr>
@@ -121,7 +135,7 @@ class ColumnWidget:
         width = self.width
         return self.indicator.setStyleSheet(f'''QPushButton {{
                 background-color: {color};
-                color: white;
+                color: red;
                 border-style: solid;
                 border-width: 1px;
                 border-radius: {width/2}px;
@@ -130,6 +144,7 @@ class ColumnWidget:
                 max-height: {width}px;
                 min-width: {width}px;
                 min-height: {width}px;
+                font-size: 36px;
             }}''')
 
     def state_changed(self):
@@ -377,6 +392,7 @@ class XFPSampleSelector:
     def toggle_all(self, state):
         for column in self.slots:
             column.cb.setChecked(state and column.sb.value() > 0)
+            column.indicator.setEnabled(True)
 
     def align_ht(self):
         RE(align_ht())
