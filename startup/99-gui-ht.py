@@ -9,30 +9,41 @@ from locate_slot import LetterNumberLocator
 class ColumnWidget:
     def __init__(self, j, data=None):
         self._position = j
-        cb = self.cb = QtWidgets.QGroupBox('Position {}'.format(j))
+
+        self.cb = cb = QtWidgets.QGroupBox('Position {}'.format(j))
         cb.setCheckable(True)
-        sb = self.sb = QtWidgets.QDoubleSpinBox()
+
+        self.sb = sb = QtWidgets.QDoubleSpinBox()
         sb.setValue(10)
-        sb.setMinimum(10)
+        sb.setMinimum(0)
         sb.setMaximum(20000)
-        le = self.le = QtWidgets.QLineEdit('sample {}'.format(j))
+
+        self.le = le = QtWidgets.QLineEdit('sample {}'.format(j))
+
         self.notes = notes = QtWidgets.QTextEdit(''.format(j))
+
         self.data = data
 
-        if data is not None:
-            label_text = f"{data['Location']}\n----\n{data['Slot (0-95)']}"
-        else:
-            label_text = ''
-        indicator = self.indicator = QtWidgets.QPushButton(label_text)
+        self.label_text = label_text = ''
+
+        if self.data is not None:
+            self.label_text = f"Slot: {data['Location']} / {data['Slot (0-95)']}"
+            self.cb.setTitle(self.label_text)
+            # label_text = f"{data['Location']}\n----\n{data['Slot (0-95)']}"
+            self.le.setText(data['Sample name'])
+            self.notes.setText(data['Notes'])
+            self.sb.setValue(float(data['Exposure time (ms)']))
+
+        self.indicator = indicator = QtWidgets.QPushButton()
         # indicator.setStyleSheet ('background-color: red;border-style: outset;border-width: 2px;border-radius: 200px;border-color: beige;font: bold 14px;min-width: 10em;padding: 6px;')
 
-        width = self.width = 50
-        color = self.color = 'gray'
+        self.width = width = 30
+        self.color = color = 'green'
 
-        colors = ['blue', 'red', 'green']
+        self.colors = colors = ['blue', 'red', 'green']
         self.cycler = cycle(colors)
 
-        indicator.setStyleSheet('''QPushButton {{
+        self.indicator.setStyleSheet('''QPushButton {{
                 background-color: {color};
                 color: white;
                 border-style: solid;
@@ -44,39 +55,50 @@ class ColumnWidget:
                 min-width: {width}px;
                 min-height: {width}px;
             }}'''.format(width=width, radius=width/2, color=color))
-        indicator.clicked.connect(self.input_dialog)
+        self.indicator.clicked.connect(self.input_dialog)
+        tooltip_text = f"""\
+Slot: {self.label_text}
+Name: {self.le.text()}
+Exposure: {self.sb.value()}
+Notes: {self.notes.toPlainText()}\
+"""
+        self.indicator.setToolTip(tooltip_text)
 
         # indicator.setFixedHeight(30)
         # indicator.setFixedWidth(30)
 
         # label.setStyleSheet('QLabel {background-color: green; color: white}')
 
-        cb.toggled.connect(sb.setEnabled)
-        cb.toggled.connect(le.setEnabled)
-        cb.setChecked(True)
+        self.cb.toggled.connect(self.sb.setEnabled)
+        self.cb.toggled.connect(self.le.setEnabled)
+        self.cb.toggled.connect(self.state_changed)
+        self.cb.setChecked(True)
 
-        f_layout = QtWidgets.QFormLayout()
-        # f_layout.addRow('name', le)
-        # f_layout.addRow('exposure[ms]', sb)
-        # f_layout.addRow('notes', notes)
-        f_layout.addRow('', indicator)
+        self.f_layout = QtWidgets.QFormLayout()
+        self.f_layout.addRow('', self.indicator)
 
-        cb.setLayout(f_layout)
+        self.cb.setLayout(self.f_layout)
+
+        self._cb = QtWidgets.QGroupBox()
+        self._cb.setTitle(self.label_text)
+        self._f_layout = QtWidgets.QFormLayout()
+        self._cb.setLayout(self._f_layout)
+
+        self._f_layout.addRow('Name', self.le)
+        self._f_layout.addRow('Exposure [ms]', self.sb)
+        self._f_layout.addRow('Notes', self.notes)
 
     def input_dialog(self):
-        self.dialog_window = dialog_window = QtWidgets.QLabel()
-        dialog_window.show()
-        text, ok = QtWidgets.QInputDialog.getDouble(dialog_window, 'Parameters', 'Exposure:', 10)
-        if ok:
-            self.indicator.setText(str(text))
-            self.change_color()
+        self.change_color()
+        self._cb.show()
 
-    def change_color(self):
-        color = next(self.cycler)
+    def change_color(self, color=None):
+        if not color:
+            color = next(self.cycler)
         width = self.width
-        print()
-        for k, v in self.data.items():
-            print(f'{k:20s}: {v}')
+        # print()
+        # for k, v in self.data.items():
+        #     print(f'{k:20s}: {v}')
         return self.indicator.setStyleSheet(f'''QPushButton {{
                 background-color: {color};
                 color: white;
@@ -89,6 +111,12 @@ class ColumnWidget:
                 min-width: {width}px;
                 min-height: {width}px;
             }}''')
+
+    def state_changed(self):
+        if self.cb.isChecked():
+            self.change_color(color='green')
+        else:
+            self.change_color(color='gray')
 
     @property
     def enabled(self):
@@ -103,9 +131,11 @@ class ColumnWidget:
     def position(self):
         return self._position
 
-    property
+    @property
     def exposure(self):
-        return self.sb.value()
+        self._exposure = self.sb.value()
+        return self._exposure
+
 
 class DirectorySelector:
     '''
@@ -235,8 +265,8 @@ class RunEngineControls:
             button_run_text = 'Run'
             button_pause_text = 'Pause'
 
-        width = 60
-        height = 60
+        width = 50
+        height = 50
         self.label.setFixedHeight(width)
         self.label.setFixedWidth(height)
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
