@@ -21,7 +21,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
     global PS_X, PS_Y, HT_COORDS
 
     uid, PS_X = yield from _align_ht('horizontal', ht.x,
-                                     x_start-offset, x_start+offset, 61,
+                                     x_start-offset, x_start+offset, 121,
                                      md=md)
     '''
     if uid is not None:
@@ -34,7 +34,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
     yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
     
     uid, PS_Y = yield from _align_ht('vertical', ht.y,
-                                     y_start-offset, y_start+offset, 61,
+                                     y_start-offset, y_start+offset, 121,
                                      md=md)
     '''
     if uid is not None:
