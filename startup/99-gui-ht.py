@@ -407,6 +407,12 @@ class XFPSampleSelector:
         button_align.clicked.connect(self.align_ht)
         controls_layout.addWidget(button_align)
 
+        # Checkbox to enable/disable the protective shutter per each slot or per whole run
+        self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
+        self.checkbox_shutter.setChecked(True)
+        self.checkbox_shutter.setCheckable(True)
+        controls_layout.addWidget(self.checkbox_shutter)
+
         main_layout.addLayout(controls_layout)
 
         self.rows = rows
@@ -462,6 +468,10 @@ class XFPSampleSelector:
         if reason:
             base_md['reason'] = reason
 
+        if not self.checkbox_shutter.isChecked():
+            # open the protective shutter
+            yield from bps.mv(shutter, 'Open')
+
         for gui_d in self.walk_values():
             d = dict(base_md)
             d.update(gui_d)
@@ -486,10 +496,15 @@ class XFPSampleSelector:
             self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
             self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
 
-            uid = (yield from xfp_plan_fast_shutter(d))
+            uid = (yield from xfp_plan_fast_shutter(
+                d, shutter_per_slot=self.checkbox_shutter.isChecked()))
             print(f'UID from xfp_plan_fast_shutter(): {uid}')
             if uid is not None:
                 uid_list.append(uid)
+
+        if not self.checkbox_shutter.isChecked():
+            # close the protective shutter
+            yield from bps.mv(shutter, 'Close')
 
         if uid_list:
             columns = ('uid', 'name', 'exposure', 'notes')
@@ -511,19 +526,21 @@ def motors_positions(motors):
     return '\n'.join(format_str).format(*motor_values)
 
 
-def xfp_plan_fast_shutter(d):
+def xfp_plan_fast_shutter(d, shutter_per_slot):
     exp_time = d['exposure']/1000
     yield from bps.mv(dg, exp_time)
 
-    # open the protective shutter
-    yield from bps.abs_set(shutter, 'Open', wait=True)
+    if shutter_per_slot:
+        # open the protective shutter
+        yield from bps.mv(shutter, 'Open')
 
     # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg.fire, 1)
     yield from bps.sleep(exp_time*1.1)
 
-    # close the protective shutter
-    yield from bps.abs_set(shutter, 'Close', wait=True)
+    if shutter_per_slot:
+        # close the protective shutter
+        yield from bps.mv(shutter, 'Close')
 
     return (yield from bp.count([ht.x, ht.y], md=d))
 
