@@ -233,6 +233,46 @@ class DirectorySelector:
         self.set_path(in_path)
 
 
+class FileSelector:
+    '''
+    A widget class to deal with selecting and displaying files
+    '''
+    def __init__(self, caption, path=''):
+        self.file_name = None
+
+        self.cap = caption
+        widget = self.widget = QtWidgets.QGroupBox(caption)
+        notes = self.notes = QtWidgets.QTextEdit('')
+
+        hlayout = QtWidgets.QHBoxLayout()
+        self.label = label = QtWidgets.QLabel(path)
+        short_desc = self.short_desc = QtWidgets.QLabel()
+
+        hlayout.addWidget(self.label)
+        # hlayout.addStretch()
+        self.button_name = 'Select Excel file'
+        button = QtWidgets.QPushButton(self.button_name)
+        button.setIcon(QtGui.QIcon.fromTheme('file'))
+        button.clicked.connect(self.select_file)
+
+        f_layout = QtWidgets.QFormLayout()
+        f_layout.addRow(button, hlayout)
+        f_layout.addRow('Selected file:', short_desc)
+        # f_layout.addRow('overall notes', notes)
+
+        widget.setLayout(f_layout)
+
+    def select_file(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(
+            None, 'Select Excel file', os.getcwd(),
+        filter='*.xls, *.xlsx')
+        self.file_name = fname[0]
+        self.short_desc.setText(self.file_name)
+
+    def update_cells(self):
+        pass
+
+
 class RunEngineControls:
     def __init__(self, RE, GUI, motors):
 
@@ -330,15 +370,13 @@ class XFPSampleSelector:
         # Slots:
         slots_layout = QtWidgets.QGridLayout()
 
-        self.rows = rows
-        self.cols = cols
-
         self.slots = []
 
         self.excel_path = excel_path = str(PROFILE_STARTUP_PATH / 'examples/example.xlsx')
+        # fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', os.getcwd(), filter='*.xls, *.xlsx')
+        # self.excel_path = excel_path = self.import_file.file_name
         self.excel_data = excel_data = pd.read_excel(excel_path)
         self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
-
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
             cw = ColumnWidget(j, data=self.excel_data.iloc[j, :])  # label=self.letter_number.find_slot_by_1d_index(j))
@@ -350,8 +388,8 @@ class XFPSampleSelector:
         # Controls:
         controls_layout = QtWidgets.QVBoxLayout()
 
-        self.path_select = path = DirectorySelector('Export CSV path')
-        self.import_file = import_file = DirectorySelector('Import Excel file')
+        self.path_select = path = DirectorySelector('Export CSV file')
+        self.import_file = import_file = FileSelector('Import Excel file')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
         controls_layout.addWidget(self.path_select.widget)
@@ -371,17 +409,29 @@ class XFPSampleSelector:
 
         main_layout.addLayout(controls_layout)
 
+        self.rows = rows
+        self.cols = cols
+
         mw.setLayout(main_layout)
         window.setCentralWidget(mw)
 
         self.h_pos = h_pos
         self.v_pos = v_pos
 
-    def walk_values(self):
-        return [{'exposure': d.exposure,
-                 'position': d.position,
-                 **d.md} for d in self.slots
-                if d.enabled]
+    def walk_values(self, snake=True):
+        self.trajectory = trajectory = np.arange(NUM_ROWS*NUM_COLS).reshape((NUM_ROWS, NUM_COLS))
+        if snake:
+            for i in range(trajectory.shape[0]):
+                if i % 2 != 0:
+                    trajectory[i, :] = trajectory[i, ::-1]
+        return_list = []
+        for i in trajectory.reshape(NUM_ROWS*NUM_COLS):
+            d = self.slots[i]
+            if d.enabled:
+                return_list.append({'exposure': d.exposure,
+                                    'position': d.position,
+                                    **d.md})
+        return return_list
 
     def show(self):
         return self.window.show()
