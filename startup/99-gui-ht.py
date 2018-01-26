@@ -451,7 +451,7 @@ class XFPSampleSelector:
         self.enabled = self.enabled.reshape((rows, cols))
 
         # A 2d-array with the indices of the slots:
-        self.trajectory = np.arange(rows*cols).reshape((rows, rows))
+        self.trajectory = np.arange(rows*cols).reshape((rows, cols))
 
         # Prepare the snake trajectory
         non_empty_rows = []
