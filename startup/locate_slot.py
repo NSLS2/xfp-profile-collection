@@ -9,8 +9,8 @@ class LetterNumberLocator:
     def __init__(self, num_cols=NUM_COLS, num_rows=NUM_ROWS):
         self.num_cols = num_cols
         self.num_rows = num_rows
-        self._numbers = [str(x) for x in range(1, NUM_ROWS+1)]
-        self._letters = [x for x in ascii_uppercase[:NUM_COLS][::-1]]
+        self._numbers = [str(x) for x in range(1, num_rows+1)]
+        self._letters = [x for x in ascii_uppercase[:num_cols][::-1]]
         self.letter_number_matrix = self._create_array()
 
     def find_1d_index(self, idx_ln):

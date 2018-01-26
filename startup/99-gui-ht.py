@@ -396,6 +396,12 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.import_file.widget)
         controls_layout.addWidget(self.re_controls.widget)
 
+        # Checkbox to enable/disable the protective shutter per each slot or per whole run
+        self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
+        self.checkbox_shutter.setChecked(True)
+        self.checkbox_shutter.setCheckable(True)
+        controls_layout.addWidget(self.checkbox_shutter)
+
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
         button_toggle_all.setChecked(True)
@@ -406,12 +412,6 @@ class XFPSampleSelector:
         button_align = QtWidgets.QPushButton('Align')
         button_align.clicked.connect(self.align_ht)
         controls_layout.addWidget(button_align)
-
-        # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
-        self.checkbox_shutter.setChecked(True)
-        self.checkbox_shutter.setCheckable(True)
-        controls_layout.addWidget(self.checkbox_shutter)
 
         main_layout.addLayout(controls_layout)
 
@@ -426,17 +426,17 @@ class XFPSampleSelector:
 
     def walk_values(self, snake=True):
         # A 1d-array with bools (0/1) showing if the slot is enabled:
-        self.enabled = np.zeros((NUM_ROWS*NUM_COLS))
-        for i in range(NUM_ROWS*NUM_COLS):
+        self.enabled = np.zeros((rows*cols))
+        for i in range(rows*cols):
             d = self.slots[i]
             if d.enabled:
                 self.enabled[i] = 1
 
         # Convert it to 2d-array:
-        self.enabled = self.enabled.reshape((NUM_ROWS, NUM_COLS))
+        self.enabled = self.enabled.reshape((rows, cols))
 
         # A 2d-array with the indices of the slots:
-        self.trajectory = np.arange(NUM_ROWS*NUM_COLS).reshape((NUM_ROWS, NUM_COLS))
+        self.trajectory = np.arange(rows*cols).reshape((rows, rows))
 
         # Prepare the snake trajectory
         non_empty_rows = []
@@ -450,7 +450,7 @@ class XFPSampleSelector:
 
         # List of return values:
         return_list = []
-        for i in self.trajectory.reshape(NUM_ROWS*NUM_COLS):
+        for i in self.trajectory.reshape(rows*cols):
             d = self.slots[i]
             if d.enabled:
                 return_list.append({'exposure': d.exposure,
@@ -501,11 +501,9 @@ class XFPSampleSelector:
             print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
             self.slots[gui_d['position']].change_color(COLOR_RUNNING)
 
-            yield from bps.abs_set(ht.x,
-                                   self.h_pos[gui_d['position']],
+            yield from bps.abs_set(ht.x, self.h_pos[gui_d['position']],
                                    group='ht')
-            yield from bps.abs_set(ht.y,
-                                   self.v_pos[gui_d['position']],
+            yield from bps.abs_set(ht.y, self.v_pos[gui_d['position']],
                                    group='ht')
 
             # always want to wait at least 3 seconds
