@@ -425,13 +425,32 @@ class XFPSampleSelector:
         self.v_pos = v_pos
 
     def walk_values(self, snake=True):
-        self.trajectory = trajectory = np.arange(NUM_ROWS*NUM_COLS).reshape((NUM_ROWS, NUM_COLS))
+        # A 1d-array with bools (0/1) showing if the slot is enabled:
+        self.enabled = np.zeros((NUM_ROWS*NUM_COLS))
+        for i in range(NUM_ROWS*NUM_COLS):
+            d = self.slots[i]
+            if d.enabled:
+                self.enabled[i] = 1
+
+        # Convert it to 2d-array:
+        self.enabled = self.enabled.reshape((NUM_ROWS, NUM_COLS))
+
+        # A 2d-array with the indices of the slots:
+        self.trajectory = np.arange(NUM_ROWS*NUM_COLS).reshape((NUM_ROWS, NUM_COLS))
+
+        # Prepare the snake trajectory
+        non_empty_rows = []
         if snake:
-            for i in range(trajectory.shape[0]):
+            for i in range(self.enabled.shape[0]):
+                if 1 in self.enabled[i, :]:
+                    non_empty_rows.append(i)
+            for i, i_real in enumerate(non_empty_rows):
                 if i % 2 != 0:
-                    trajectory[i, :] = trajectory[i, ::-1]
+                    self.trajectory[i_real, :] = self.trajectory[i_real, ::-1]
+
+        # List of return values:
         return_list = []
-        for i in trajectory.reshape(NUM_ROWS*NUM_COLS):
+        for i in self.trajectory.reshape(NUM_ROWS*NUM_COLS):
             d = self.slots[i]
             if d.enabled:
                 return_list.append({'exposure': d.exposure,
