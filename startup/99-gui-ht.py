@@ -438,6 +438,8 @@ class XFPSampleSelector:
         self.v_pos = v_pos
 
     def walk_values(self, snake=True):
+        rows = self.rows
+        cols = self.cols
         # A 1d-array with bools (0/1) showing if the slot is enabled:
         self.enabled = np.zeros((rows*cols))
         for i in range(rows*cols):
