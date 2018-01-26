@@ -31,13 +31,6 @@ class ColumnWidget:
 
         self.label_text = ''
 
-        if self.data is not None:
-            self.label_text = f"Slot: {data['Location']} / {data['Slot (0-95)']}"
-            self.cb.setTitle(self.label_text)
-            self.le.setText(self.data['Sample name'])
-            self.notes.setText(self.data['Notes'])
-            self.sb.setValue(float(self.data['Exposure time (ms)']))
-
         self.indicator = QtWidgets.QPushButton()
 
         self.width = 30
@@ -58,10 +51,10 @@ class ColumnWidget:
                 font-size: 36px;
             }}'''.format(width=self.width, radius=self.width/2, color=self.color))
         self.indicator.clicked.connect(self.input_dialog)
-        self.tooltip_update()
+        self.update_slot()  # update slot info with self.data
 
-        self.cb.toggled.connect(self.sb.setEnabled)
-        self.cb.toggled.connect(self.le.setEnabled)
+        # self.cb.toggled.connect(self.sb.setEnabled)
+        # self.cb.toggled.connect(self.le.setEnabled)
         self.cb.toggled.connect(self.state_changed)
         self.cb.setChecked(self.sb.value() > 0)
         self.indicator.setEnabled(True)
@@ -74,7 +67,7 @@ class ColumnWidget:
 
         # Pop up window with parameters:
         self.popup_window = QtWidgets.QMainWindow()
-        self.popup_window.setWindowTitle(f'{self.label_text}')
+        self.popup_window.setWindowTitle(self.label_text)
 
         self.popup_widget = QtWidgets.QGroupBox()
         self.popup_widget.setTitle(self.label_text)
@@ -91,6 +84,15 @@ class ColumnWidget:
         self.sb.valueChanged.connect(self.check_zero)
         self.le.textChanged.connect(self.tooltip_update)
         self.notes.textChanged.connect(self.tooltip_update)
+
+    def update_slot(self):
+        if self.data is not None:
+            self.label_text = f"Slot: {self.data['Location']} / {self.data['Slot (0-95)']}"
+            self.cb.setTitle(self.label_text)
+            self.le.setText(self.data['Sample name'])
+            self.notes.setText(self.data['Notes'])
+            self.sb.setValue(float(self.data['Exposure time (ms)']))
+        self.tooltip_update()
 
     def input_dialog(self):
         self.popup_window.show()
@@ -190,14 +192,15 @@ class DirectorySelector:
 
         hlayout.addWidget(self.label)
         hlayout.addStretch()
-        button = QtWidgets.QPushButton('')
+        button = QtWidgets.QPushButton('Select folder')
         button.setIcon(QtGui.QIcon.fromTheme('folder'))
         button.clicked.connect(self.select_path)
         # hlayout.addWidget(button)
 
         f_layout = QtWidgets.QFormLayout()
-        f_layout.addRow(button, hlayout)
-        f_layout.addRow('short description', short_desc)
+        f_layout.addRow(button, None)
+        f_layout.addRow(hlayout)
+        f_layout.addRow('File template:', short_desc)
         # f_layout.addRow('overall notes', notes)
 
         widget.setLayout(f_layout)
@@ -237,8 +240,9 @@ class FileSelector:
     '''
     A widget class to deal with selecting and displaying files
     '''
-    def __init__(self, caption, path=''):
+    def __init__(self, caption, path='', ext_widget=None):
         self.file_name = None
+        self.ext_widget = ext_widget
 
         self.cap = caption
         widget = self.widget = QtWidgets.QGroupBox(caption)
@@ -246,7 +250,8 @@ class FileSelector:
 
         hlayout = QtWidgets.QHBoxLayout()
         self.label = label = QtWidgets.QLabel(path)
-        short_desc = self.short_desc = QtWidgets.QLabel()
+        short_desc = self.short_desc = QtWidgets.QLineEdit()
+        short_desc.setReadOnly(True)
 
         hlayout.addWidget(self.label)
         # hlayout.addStretch()
@@ -258,7 +263,6 @@ class FileSelector:
         f_layout = QtWidgets.QFormLayout()
         f_layout.addRow(button, hlayout)
         f_layout.addRow('Selected file:', short_desc)
-        # f_layout.addRow('overall notes', notes)
 
         widget.setLayout(f_layout)
 
@@ -268,9 +272,13 @@ class FileSelector:
         filter='*.xls, *.xlsx')
         self.file_name = fname[0]
         self.short_desc.setText(self.file_name)
+        self.update_cells()
 
     def update_cells(self):
-        pass
+        self.excel_data = pd.read_excel(self.file_name)
+        for j in range(NUM_ROWS*NUM_COLS):
+            self.ext_widget.slots[j].data = self.excel_data.iloc[j, :]
+            self.ext_widget.slots[j].update_slot()
 
 
 class RunEngineControls:
@@ -349,7 +357,7 @@ class RunEngineControls:
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
         self.label.setText(state)
 
-        self.info_label.setText(f'Motor position:\n\n{motors_positions(self.motors)}')
+        self.info_label.setText(f'Motors positions:\n\n{motors_positions(self.motors)}')
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
         self.button_pause.setEnabled(button_pause_enabled)
@@ -370,30 +378,34 @@ class XFPSampleSelector:
         # Slots:
         slots_layout = QtWidgets.QGridLayout()
 
-        self.slots = []
-
-        self.excel_path = excel_path = str(PROFILE_STARTUP_PATH / 'examples/example.xlsx')
-        # fname = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', os.getcwd(), filter='*.xls, *.xlsx')
-        # self.excel_path = excel_path = self.import_file.file_name
-        self.excel_data = excel_data = pd.read_excel(excel_path)
         self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
+
+        self.slots = []
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
-            cw = ColumnWidget(j, data=self.excel_data.iloc[j, :])  # label=self.letter_number.find_slot_by_1d_index(j))
+            data = {
+                'Location': self.letter_number.find_slot_by_1d_index(j),
+                'Slot (0-95)': j,
+                'Sample name': '',
+                'Notes': '',
+                'Exposure time (ms)': 0
+            }
+            cw = ColumnWidget(j, data=data)
             slots_layout.addWidget(cw.cb, r, c)
             self.slots.append(cw)
 
         main_layout.addLayout(slots_layout)
 
         # Controls:
-        controls_layout = QtWidgets.QVBoxLayout()
+        self.controls_layout = controls_layout = QtWidgets.QVBoxLayout()
 
-        self.path_select = path = DirectorySelector('Export CSV file')
-        self.import_file = import_file = FileSelector('Import Excel file')
+        # Import Excel file controls:
+        self.import_file = import_file = FileSelector('Import Excel file', ext_widget=self)
+        self.path_select = path = DirectorySelector('Export CSV file after run')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
-        controls_layout.addWidget(self.path_select.widget)
         controls_layout.addWidget(self.import_file.widget)
+        controls_layout.addWidget(self.path_select.widget)
         controls_layout.addWidget(self.re_controls.widget)
 
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
@@ -402,6 +414,7 @@ class XFPSampleSelector:
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
 
+        # Check/Uncheck button:
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
         button_toggle_all.setChecked(True)
