@@ -45,6 +45,9 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
     HT_COORDS = default_coords(x_start=PS_X.com, y_start=PS_Y.com)
     HT_COORDS.to_csv(HT_COORDS_FILE, float_format='%.2f')
 
+    # Move both hor. & vert. positions to COM after alignment:
+    yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
+
 
 def default_coords(x_start=HT_X_START, y_start=HT_Y_START, 
                    x_init_slot=2, y_init_slot=0,
@@ -86,6 +89,11 @@ def _align_ht(dir_name, mtr,
            'plan_name': '_align_ht',
            'dir_name': dir_name}
     _md.update(md or {})
+
+    # fire the fast shutter and wait for it to close again
+    yield from bps.abs_set(dg, 90, wait=False)  # 90 seconds of exp_time
+    yield from bps.abs_set(dg.fire, 1, wait=False)
+
     yield from bps.mv(shutter, 'Open')
     
     uid = yield from bpp.subs_wrapper(
@@ -96,6 +104,8 @@ def _align_ht(dir_name, mtr,
             [lp, ps])
     print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
 
-    yield from bps.mv(shutter, 'Close')
+    yield from bps.mv(shutter, 'Close')  # close the protective shutter
+    yield from bps.abs_set(dg, 0, wait=False)  # set delay to 0 (causes interruption of current delay)
+
     return (uid, ps)
 
