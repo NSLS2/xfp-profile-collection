@@ -32,7 +32,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
 
     # Move hor. position to COM before we scan vertical one:
     yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
-    
+
     uid, PS_Y = yield from _align_ht('vertical', ht.y,
                                      y_start-offset, y_start+offset, 121,
                                      md=md)
@@ -84,18 +84,17 @@ def _align_ht(dir_name, mtr,
     fig = plt.figure('align {}'.format(mtr.name))
     lp = LivePlot('tcm1_val', mtr.name, ax=fig.gca())
     ps = PeakStats(mtr.name, 'tcm1_val')
-    
+
     _md = {'purpose': 'table alignment',
            'plan_name': '_align_ht',
            'dir_name': dir_name}
     _md.update(md or {})
 
     # fire the fast shutter and wait for it to close again
-    yield from bps.abs_set(dg, 90, wait=False)  # 90 seconds of exp_time
-    yield from bps.abs_set(dg.fire, 1, wait=False)
+    yield from bps.mv(dg, 90)  # generate 90-seconds pulse
+    yield from bps.mv(dg.fire, 1)
+    yield from bps.mv(shutter, 'Open')  # open the protective shutter
 
-    yield from bps.mv(shutter, 'Open')
-    
     uid = yield from bpp.subs_wrapper(
             bp.scan([tcm1],
                      mtr,
@@ -105,7 +104,7 @@ def _align_ht(dir_name, mtr,
     print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
 
     yield from bps.mv(shutter, 'Close')  # close the protective shutter
-    yield from bps.abs_set(dg, 0, wait=False)  # set delay to 0 (causes interruption of current delay)
+    yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
 
     return (uid, ps)
 
