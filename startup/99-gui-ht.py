@@ -534,6 +534,8 @@ class XFPSampleSelector:
             if uid is not None:
                 uid_list.append(uid)
 
+            yield from bps.checkpoint()
+
         if not self.checkbox_shutter.isChecked():
             # close the protective shutter
             yield from bps.mv(shutter, 'Close')

@@ -106,5 +106,7 @@ def _align_ht(dir_name, mtr,
     yield from bps.mv(shutter, 'Close')  # close the protective shutter
     yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
 
+    yield from bps.checkpoint()
+
     return (uid, ps)
 
