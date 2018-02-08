@@ -491,6 +491,13 @@ class XFPSampleSelector:
     def align_ht(self):
         RE(align_ht())
 
+    def set_test(self):
+        for i in [(0, 10), (2, 20), (29, 30)]:
+            column = self.slots[i[0]]
+            column.cb.setChecked(True)
+            column.indicator.setEnabled(True)
+            column.sb.setValue(i[1])
+
     def plan(self, file_name=None):
 
         def close_shutters():
