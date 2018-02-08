@@ -496,6 +496,7 @@ class XFPSampleSelector:
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
+            yield from bps.mv(ht.x, -96, ht.y, -50)
 
         def main_plan(file_name):
             reason = self.path_select.short_desc.displayText()
@@ -561,8 +562,6 @@ class XFPSampleSelector:
                 self.last_table = tbl
                 if file_name is not None:
                     tbl.to_csv(file_name, index=False)
-
-            yield from bps.mv(ht.x, -96, ht.y, -50)
 
         return (yield from bpp.finalize_wrapper(main_plan(file_name),
                                                 close_shutters()))

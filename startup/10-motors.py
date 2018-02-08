@@ -34,7 +34,13 @@ class TwoButtonShutter(Device):
         cmd_sig = cmd_map[val]
         target_val = target_map[val]
 
-        st = self._set_st = DeviceStatus(self)
+        st = DeviceStatus(self)
+        if self.status.get() == target_val:
+            st._finished()
+            return st
+
+        self._set_st = st
+        # print(self.name, val, id(st))
         enums = self.status.enum_strs
 
         def shutter_cb(value, timestamp, **kwargs):
