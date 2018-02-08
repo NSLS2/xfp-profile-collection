@@ -316,10 +316,14 @@ class RunEngineControls:
         self.handle_state_change(self.RE.state, None)
 
     def run(self):
-        if self.RE.state == 'idle':
-            self.RE(self.GUI.plan())
+        if EpicsSignalRO(pps_shutter.enabled_status.pvname).value == 0:
+            self.label.setText('Shutter\nnot\nenabled')
+            self.label.setStyleSheet(f'QLabel {{background-color: red; color: white}}')
         else:
-            self.RE.resume()
+            if self.RE.state == 'idle':
+                self.RE(self.GUI.plan())
+            else:
+                self.RE.resume()
 
     def pause(self):
         if self.RE.state == 'running':
@@ -350,8 +354,8 @@ class RunEngineControls:
             button_run_text = 'Run'
             button_pause_text = 'Pause'
 
-        width = 50
-        height = 50
+        width = 60
+        height = 60
         self.label.setFixedHeight(width)
         self.label.setFixedWidth(height)
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
