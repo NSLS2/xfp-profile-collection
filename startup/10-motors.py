@@ -40,9 +40,10 @@ class TwoButtonShutter(Device):
         def shutter_cb(value, timestamp, **kwargs):
             value = enums[int(value)]
             if value == target_val:
-                self._set_st._finished()
+                lstats = self._set_st
                 self._set_st = None
                 self.status.clear_sub(shutter_cb)
+                lstats._finished()
 
         cmd_enums = cmd_sig.enum_strs
         count = 0
