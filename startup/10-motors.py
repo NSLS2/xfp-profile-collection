@@ -16,6 +16,8 @@ class TwoButtonShutter(Device):
     status = Cpt(EpicsSignalRO, 'Pos-Sts', string=True)
     fail_to_close = Cpt(EpicsSignalRO, 'Sts:FailCls-Sts', string=True)
     fail_to_open = Cpt(EpicsSignalRO, 'Sts:FailOpn-Sts', string=True)
+    enabled_status = Cpt(EpicsSignalRO, 'Enbl-Sts', string=True)
+
     # user facing commands
     open_str = 'Open'
     close_str = 'Close'
@@ -58,7 +60,8 @@ class TwoButtonShutter(Device):
                     time.sleep(.5)
                     cmd_sig.set(1)
                     ts = datetime.datetime.fromtimestamp(timestamp).strftime(_time_fmtstr)
-                    print('** ({}) Had to reactuate shutter while {}ing'.format(ts, val))
+                    if count > 2:
+                        print('** ({}) Had to reactuate shutter while {}ing'.format(ts, val if val is not 'Close' else val[:-1]))
                 else:
                     cmd_sig.clear_sub(cmd_retry_cb)
 
@@ -66,15 +69,35 @@ class TwoButtonShutter(Device):
         cmd_sig.set(1)
         self.status.subscribe(shutter_cb)
 
-
         return st
 
+    def stop(self, success):
+        self._was_open = (self.open_val == self.status.get())
+        st = self.set('Close')
+        while not st.done:
+            import time
+            time.sleep(.5)
+
+    def resume(self):
+        if self._was_open:
+            st = self.set('Open')
+            while not st.done:
+                import time
+                time.sleep(.5)
+
+    def unstage(self):
+        self._was_open = False
+        return super().unstage()
+
     def __init__(self, *args, **kwargs):
+        self._was_open = False
         super().__init__(*args, **kwargs)
         self._set_st = None
         self.read_attrs = ['status']
 
 shutter = TwoButtonShutter('XF:17BMA-EPS{Sh:1}', name='shutter')
+pps_shutter = TwoButtonShutter('XF:17BM-PPS{Sh:FE}', name='pps_shutter')
+
 
 class Slits(Device):
     top = Cpt(EpicsMotor, 'T}Mtr')
@@ -424,13 +447,6 @@ class HT(Device):
     y = Cpt(EpicsMotor, 'Y}Mtr')
 
 ht = HT('XF:17BMA-ES:2{Stg:7-Ax:', name='ht')
-
-class PPS_Shutter(Device):
-    pps_open = Cpt(EpicsSignal, 'Opn-Cmd')
-    # pps_close = Cpt(EpicsSignal, 'In-Cmd')
-
-pps_shutter = PPS_Shutter('XF:17BM-PPS{Sh:FE}Cmd:', name='pps_shutter')
-
 
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')

@@ -488,67 +488,80 @@ class XFPSampleSelector:
         RE(align_ht())
 
     def plan(self, file_name=None):
-        reason = self.path_select.short_desc.displayText()
-        run_notes = self.path_select.notes.toPlainText()
-        if file_name is None:
-            gui_path = self.path_select.path
-            if gui_path and reason:
-                fname = '_'.join(reason.split()) + '.csv'
-                file_name = os.path.join(gui_path, fname)
-        print(file_name)
 
-        uid_list = []
-        base_md = {'plan_name': 'ht'}
-        if reason:
-            base_md['reason'] = reason
-
-        if not self.checkbox_shutter.isChecked():
-            # open the protective shutter
-            yield from bps.mv(shutter, 'Open')
-
-        for gui_d in self.walk_values():
-            d = dict(base_md)
-            d.update(gui_d)
-
-            row_num, col_num = np.unravel_index(gui_d['position'], (self.rows, self.cols))
-
-            print(f"Info: {d}")
-            print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
-            self.slots[gui_d['position']].change_color(COLOR_RUNNING)
-
-            yield from bps.abs_set(ht.x, self.h_pos[gui_d['position']],
-                                   group='ht')
-            yield from bps.abs_set(ht.y, self.v_pos[gui_d['position']],
-                                   group='ht')
-
-            # always want to wait at least 3 seconds
-            yield from bps.sleep(3)
-            yield from bps.wait('ht')
-
-            self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
-            self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
-
-            uid = (yield from xfp_plan_fast_shutter(
-                d, shutter_per_slot=self.checkbox_shutter.isChecked()))
-            print(f'UID from xfp_plan_fast_shutter(): {uid}')
-            if uid is not None:
-                uid_list.append(uid)
-
-            yield from bps.checkpoint()
-
-        if not self.checkbox_shutter.isChecked():
-            # close the protective shutter
+        def close_shutters():
             yield from bps.mv(shutter, 'Close')
+            yield from bps.mv(pps_shutter, 'Close')
 
-        if uid_list:
-            columns = ('uid', 'name', 'exposure', 'notes')
-            tbl = pd.DataFrame([[h.start[c] for c in columns]
-                                for h in db[uid_list]], columns=columns)
-            self.last_table = tbl
-            if file_name is not None:
-                tbl.to_csv(file_name, index=False)
+        def main_plan(file_name):
+            reason = self.path_select.short_desc.displayText()
+            run_notes = self.path_select.notes.toPlainText()
+            if file_name is None:
+                gui_path = self.path_select.path
+                if gui_path and reason:
+                    fname = '_'.join(reason.split()) + '.csv'
+                    file_name = os.path.join(gui_path, fname)
+            print(file_name)
 
-        yield from bps.mv(ht.x, -96, ht.y, -50)
+            uid_list = []
+            base_md = {'plan_name': 'ht'}
+            if reason:
+                base_md['reason'] = reason
+
+            yield from bps.mv(pps_shutter, 'Open')
+
+            if not self.checkbox_shutter.isChecked():
+                # open the protective shutter
+                yield from bps.mv(shutter, 'Open')
+
+            for gui_d in self.walk_values():
+                d = dict(base_md)
+                d.update(gui_d)
+
+                row_num, col_num = np.unravel_index(gui_d['position'], (self.rows, self.cols))
+
+                print(f"Info: {d}")
+                print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
+                self.slots[gui_d['position']].change_color(COLOR_RUNNING)
+
+                yield from bps.abs_set(ht.x, self.h_pos[gui_d['position']],
+                                       group='ht')
+                yield from bps.abs_set(ht.y, self.v_pos[gui_d['position']],
+                                       group='ht')
+
+                # always want to wait at least 3 seconds
+                yield from bps.sleep(3)
+                yield from bps.wait('ht')
+
+                self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
+                self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
+
+                uid = (yield from xfp_plan_fast_shutter(
+                    d, shutter_per_slot=self.checkbox_shutter.isChecked()))
+                print(f'UID from xfp_plan_fast_shutter(): {uid}')
+                if uid is not None:
+                    uid_list.append(uid)
+
+                yield from bps.checkpoint()
+
+            if not self.checkbox_shutter.isChecked():
+                # close the protective shutter
+                yield from bps.mv(shutter, 'Close')
+
+            yield from bps.mv(pps_shutter, 'Close')
+
+            if uid_list:
+                columns = ('uid', 'name', 'exposure', 'notes')
+                tbl = pd.DataFrame([[h.start[c] for c in columns]
+                                    for h in db[uid_list]], columns=columns)
+                self.last_table = tbl
+                if file_name is not None:
+                    tbl.to_csv(file_name, index=False)
+
+            yield from bps.mv(ht.x, -96, ht.y, -50)
+
+        return (yield from bpp.finalize_wrapper(main_plan(file_name),
+                                                close_shutters()))
 
 
 def motors_positions(motors):
