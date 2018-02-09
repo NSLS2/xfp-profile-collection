@@ -281,7 +281,7 @@ class FileSelector:
                                                'Sample name': str,
                                                'Exposure time (ms)': float,
                                                'Notes': str},
-                                        keep_default_na=False))
+                                        keep_default_na=False)
         for j in range(NUM_ROWS*NUM_COLS):
             self.ext_widget.slots[j].data = self.excel_data.iloc[j, :]
             self.ext_widget.slots[j].update_slot()
