@@ -243,6 +243,7 @@ class FileSelector:
     def __init__(self, caption, path='', ext_widget=None):
         self.file_name = None
         self.ext_widget = ext_widget
+        self.excel_data = None
 
         self.cap = caption
         widget = self.widget = QtWidgets.QGroupBox(caption)
@@ -405,7 +406,7 @@ class XFPSampleSelector:
             data = {
                 'location': self.letter_number.find_slot_by_1d_index(j),
                 'slot': j,
-                'sample': '',
+                'name': '',
                 'notes': '',
                 'exposure': 0
             }
