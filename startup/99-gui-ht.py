@@ -275,7 +275,13 @@ class FileSelector:
         self.update_cells()
 
     def update_cells(self):
-        self.excel_data = pd.read_excel(self.file_name)
+        self.excel_data = pd.read_excel(self.file_name,
+                                        dtype={'Slot (0-95)': int,
+                                               'Location': str,
+                                               'Sample name': str,
+                                               'Exposure time (ms)': float,
+                                               'Notes': str},
+                                        keep_default_na=False))
         for j in range(NUM_ROWS*NUM_COLS):
             self.ext_widget.slots[j].data = self.excel_data.iloc[j, :]
             self.ext_widget.slots[j].update_slot()
