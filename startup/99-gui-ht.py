@@ -87,11 +87,11 @@ class ColumnWidget:
 
     def update_slot(self):
         if self.data is not None:
-            self.label_text = f"Slot: {self.data['Location']} / {self.data['Slot (0-95)']}"
+            self.label_text = f"Slot: {self.data['location']} / {self.data['slot']}"
             self.cb.setTitle(self.label_text)
-            self.le.setText(str(self.data['Sample name']))
-            self.notes.setText(str(self.data['Notes']))
-            self.sb.setValue(float(self.data['Exposure time (ms)']))
+            self.le.setText(str(self.data['name']))
+            self.notes.setText(str(self.data['notes']))
+            self.sb.setValue(float(self.data['exposure']))
         self.tooltip_update()
 
     def input_dialog(self):
@@ -282,6 +282,11 @@ class FileSelector:
                                                'Exposure time (ms)': float,
                                                'Notes': str},
                                         keep_default_na=False)
+        self.excel_data.columns = ['slot',
+                                   'location',
+                                   'name',
+                                   'exposure',
+                                   'notes']
         for j in range(NUM_ROWS*NUM_COLS):
             self.ext_widget.slots[j].data = self.excel_data.iloc[j, :]
             self.ext_widget.slots[j].update_slot()
@@ -398,11 +403,11 @@ class XFPSampleSelector:
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
             data = {
-                'Location': self.letter_number.find_slot_by_1d_index(j),
-                'Slot (0-95)': j,
-                'Sample name': '',
-                'Notes': '',
-                'Exposure time (ms)': 0
+                'location': self.letter_number.find_slot_by_1d_index(j),
+                'slot': j,
+                'sample': '',
+                'notes': '',
+                'exposure': 0
             }
             cw = ColumnWidget(j, data=data)
             slots_layout.addWidget(cw.cb, r, c)
