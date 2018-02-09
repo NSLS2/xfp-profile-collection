@@ -89,8 +89,8 @@ class ColumnWidget:
         if self.data is not None:
             self.label_text = f"Slot: {self.data['Location']} / {self.data['Slot (0-95)']}"
             self.cb.setTitle(self.label_text)
-            self.le.setText(self.data['Sample name'])
-            self.notes.setText(self.data['Notes'])
+            self.le.setText(str(self.data['Sample name']))
+            self.notes.setText(str(self.data['Notes']))
             self.sb.setValue(float(self.data['Exposure time (ms)']))
         self.tooltip_update()
 
@@ -369,9 +369,13 @@ class RunEngineControls:
 
 
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos, rows=12, cols=8):
+    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8):
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
+
+        self._slot_index = slot_index
+        self._rows = rows
+        self._cols = cols
 
         # Main widget:
         mw = QtWidgets.QWidget()
@@ -432,18 +436,17 @@ class XFPSampleSelector:
 
         main_layout.addLayout(controls_layout)
 
-        self.rows = rows
-        self.cols = cols
-
         mw.setLayout(main_layout)
         window.setCentralWidget(mw)
 
+        # TODO: update it during next major refactor:
+        # self.update_location(slot_align_x, slot_align_y)
         self.h_pos = h_pos
         self.v_pos = v_pos
 
     def walk_values(self, snake=True):
-        rows = self.rows
-        cols = self.cols
+        rows = self._rows
+        cols = self._cols
         # A 1d-array with bools (0/1) showing if the slot is enabled:
         self.enabled = np.zeros((rows*cols))
         for i in range(rows*cols):
@@ -498,6 +501,13 @@ class XFPSampleSelector:
             column.indicator.setEnabled(True)
             column.sb.setValue(i[1])
 
+    def update_locations(self, slot_align_x, slot_align_y):
+        d = default_coords(x_start=slot_align_x, y_start=slot_align_y,
+                           x_init_slot=self._slot_index[0], y_init_slot=self._slot_index[1],
+                           n_cols=self._cols, n_rows=self._rows)
+        self.h_pos = d['x']
+        self.v_pos = d['y']
+
     def plan(self, file_name=None):
 
         def close_shutters():
@@ -530,7 +540,7 @@ class XFPSampleSelector:
                 d = dict(base_md)
                 d.update(gui_d)
 
-                row_num, col_num = np.unravel_index(gui_d['position'], (self.rows, self.cols))
+                row_num, col_num = np.unravel_index(gui_d['position'], (self._rows, self._cols))
 
                 print(f"Info: {d}")
                 print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
