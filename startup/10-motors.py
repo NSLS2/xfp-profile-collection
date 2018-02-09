@@ -24,7 +24,7 @@ class TwoButtonShutter(Device):
 
     def set(self, val):
         if self._set_st is not None:
-            raise RuntimeError('trying to set while a set is in progress')
+            raise RuntimeError(f'trying to set {self.name} while a set is in progress')
 
         cmd_map = {self.open_str: self.open_cmd,
                    self.close_str: self.close_cmd}
@@ -40,16 +40,15 @@ class TwoButtonShutter(Device):
             return st
 
         self._set_st = st
-        # print(self.name, val, id(st))
+        print(self.name, val, id(st))
         enums = self.status.enum_strs
 
         def shutter_cb(value, timestamp, **kwargs):
             value = enums[int(value)]
             if value == target_val:
-                lstats = self._set_st
                 self._set_st = None
                 self.status.clear_sub(shutter_cb)
-                lstats._finished()
+                st._finished()
 
         cmd_enums = cmd_sig.enum_strs
         count = 0
@@ -61,6 +60,8 @@ class TwoButtonShutter(Device):
             count += 1
             if count > 5:
                 cmd_sig.clear_sub(cmd_retry_cb)
+                self._set_st = None
+                self.status.clear_sub(shutter_cb)
                 st._finished(success=False)
             if value == 'None':
                 if not st.done:
@@ -73,23 +74,31 @@ class TwoButtonShutter(Device):
                     cmd_sig.clear_sub(cmd_retry_cb)
 
         cmd_sig.subscribe(cmd_retry_cb, run=False)
-        cmd_sig.set(1)
         self.status.subscribe(shutter_cb)
+        cmd_sig.set(1)
 
         return st
 
     def stop(self, success):
+        import time
+        prev_st = self._set_st
+        if prev_st is not None:
+            while not prev_st.done:
+                time.sleep(.1)   
         self._was_open = (self.open_val == self.status.get())
         st = self.set('Close')
         while not st.done:
-            import time
             time.sleep(.5)
 
     def resume(self):
+        import time
+        prev_st = self._set_st
+        if prev_st is not None:
+            while not prev_st.done:
+                time.sleep(.1)   
         if self._was_open:
             st = self.set('Open')
             while not st.done:
-                import time
                 time.sleep(.5)
 
     def unstage(self):
