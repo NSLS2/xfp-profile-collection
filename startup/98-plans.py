@@ -52,7 +52,7 @@ def invivo_dr_fc(flow_rate, pre_vol, exp_vol, frac_vol, *, md=None):
         print("== ({}) set for {} mL/m ({:.2f} uL/s)".format(datetime.datetime.now().strftime(_time_fmtstr), flow_rate, flow_rate_ulps))
         yield from bps.abs_set(sample_pump.vel, flow_rate_ulps, wait=True)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # set fraction collector parameters
         #yield from bps.mv(fc.r1last, r1_last)
@@ -74,7 +74,7 @@ def invivo_dr_fc(flow_rate, pre_vol, exp_vol, frac_vol, *, md=None):
         yield from bps.mv(fc.run, 1)
         print("== ({}) started the pump".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) flowing pre-exposure sample for {}mL ({:.1f}s)".format(datetime.datetime.now().strftime(_time_fmtstr),
                                                                             pre_vol, pre_exp_time))
@@ -83,20 +83,20 @@ def invivo_dr_fc(flow_rate, pre_vol, exp_vol, frac_vol, *, md=None):
         yield from bps.sleep(pre_exp_time)
         print("== ({}) Done flowing pre-exposure sample".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         #open the shutter
         yield from bps.abs_set(shutter, 'Open', wait=True)
         print("== ({}) Shutter open".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) flowing exposure sample for {}ml ({:.1f}s)".format(datetime.datetime.now().strftime(_time_fmtstr),
                                                                      exp_vol, exp_time))
         # collect some sample with beam
         yield from bps.sleep(exp_time)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # close the shutter, stop the fc and stop flowing the sample
         yield from bps.complete(sample_pump, wait=True)
@@ -104,7 +104,7 @@ def invivo_dr_fc(flow_rate, pre_vol, exp_vol, frac_vol, *, md=None):
         yield from bps.mv(fc.end, 1)
         
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) done!".format(datetime.datetime.now().strftime(_time_fmtstr)))
 

@@ -51,7 +51,7 @@ def tr_pump(mix_flow_rate, mix_vol, mixing_time, exp_flow_rate, exp_vol, *, md=N
         print("== ({}) flowing at {} mL/m".format(datetime.datetime.now().strftime(_time_fmtstr), mix_flow_rate))
         yield from bps.complete(spump, wait=True)
         finish_time = time.time()
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
         print("({}) first push complete, mixing for {:.2f} s".format(datetime.datetime.now().strftime(_time_fmtstr), mixing_time))
         
         # set pump parameters for exposure push
@@ -65,7 +65,7 @@ def tr_pump(mix_flow_rate, mix_vol, mixing_time, exp_flow_rate, exp_vol, *, md=N
 
         # open the shutter
         yield from bps.abs_set(shutter, 'Open', wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # start the pump for exposure and collection
         yield from bps.kickoff(spump, wait=True)

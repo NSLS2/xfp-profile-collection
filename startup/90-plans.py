@@ -40,40 +40,40 @@ def invivo_dr(flow_rate, pre_vol, exp_vol, *, md=None):
         print("== ({}) flowing at {} mL/m ({:.2f} uL/s)".format(datetime.datetime.now().strftime(_time_fmtstr), flow_rate, flow_rate_ulps))
         yield from bp.abs_set(sample_pump.vel, flow_rate_ulps, wait=True)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # flow some sample through
         yield from bp.kickoff(sample_pump, wait=True)
         print("== ({}) started the flow pump".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) flowing pre-exposure sample for {}mL ({:.1f}s)".format(datetime.datetime.now().strftime(_time_fmtstr),
                                                                             pre_vol, pre_exp_time))
         yield from bp.sleep(pre_exp_time)
         print("== ({}) Done flowing pre-exposure sample".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         #open the shutter
         yield from bp.abs_set(shutter, 'Open', wait=True)
         print("== ({}) Shutter open".format(datetime.datetime.now().strftime(_time_fmtstr)))
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) flowing exposure sample for {}ml ({:.1f}s)".format(datetime.datetime.now().strftime(_time_fmtstr),
                                                                      exp_vol, exp_time))
         # collect some sample with beam
         yield from bp.sleep(exp_time)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # close the shutter and stop flowing the sample
         yield from bp.complete(sample_pump, wait=True)
         yield from bp.abs_set(shutter, 'Close', wait=True)
         
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print("== ({}) done!".format(datetime.datetime.now().strftime(_time_fmtstr)))
 

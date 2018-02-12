@@ -29,14 +29,14 @@ def simple_pump(pump):
         st = yield from bps.complete(pump, group='pump_done', wait=False)
         print('waiting for pump to finish')
 
-        yield from bp.trigger_and_read([pump])
+        yield from bps.trigger_and_read([pump])
 
         while st is not None and not st.done:
-            yield from bp.trigger_and_read([pump])
+            yield from bps.trigger_and_read([pump])
             yield from bps.sleep(.5)
 
         yield from bps.sleep(.1)
-        yield from bp.trigger_and_read([pump])
+        yield from bps.trigger_and_read([pump])
 
         yield from bps.wait('pump_done')
         print('pump finished')
@@ -70,13 +70,13 @@ def in_vivo(food_pump, sample_pump, fraction_collector, shutter):
         yield from bps.kickoff(fraction_collector)
         # flow some sample through
         yield from bps.kickoff(sample_pump, wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         yield from bps.sleep(pre_flow_time)
 
         #open the shutter
         yield from bps.abs_set(shutter, 'Open', wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # collect some sample with beam
         yield from bps.sleep(exposure_time)
@@ -86,7 +86,7 @@ def in_vivo(food_pump, sample_pump, fraction_collector, shutter):
         yield from bps.complete(sample_pump, wait=True)
         yield from bps.complete(fraction_collector, wait=True)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # feed the cells
         yield from bps.kickoff(food_pump, wait=True)
@@ -100,7 +100,7 @@ def in_vivo(food_pump, sample_pump, fraction_collector, shutter):
         #start the fraction collector spinning and flow some sample through
         yield from bps.kickoff(fraction_collector, wait=True)
         yield from bps.kickoff(sample_pump, wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         # collect some sample with beam
         yield from bps.sleep(post_growth_exposure_time)
@@ -110,7 +110,7 @@ def in_vivo(food_pump, sample_pump, fraction_collector, shutter):
         yield from bps.complete(sample_pump, wait=True)
         yield from bps.complete(fraction_collector, wait=True)
 
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
     def clean_up():
         yield from bps.abs_set(shutter, 'Close', wait=True)
