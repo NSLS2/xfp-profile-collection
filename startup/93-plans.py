@@ -24,7 +24,7 @@ def flow(diameter, rate, tgt_vol, *, md=None):
 
         # open the shutter
         yield from bps.abs_set(shutter, 'Open', wait=True)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         print('Shutter opened')
  
@@ -39,14 +39,14 @@ def flow(diameter, rate, tgt_vol, *, md=None):
         st = yield from bps.complete(spump, group='pump_done', wait=False)
         #st = yield from bps.complete(spump, wait=True)
         #print('pump finished')
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         while st is not None and not st.done:
-            yield from bp.trigger_and_read(dets)
+            yield from bps.trigger_and_read(dets)
             yield from bps.sleep(.5)
 
         yield from bps.sleep(.1)
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
         yield from bps.wait('pump_done')
         print('pump finished')
@@ -54,7 +54,7 @@ def flow(diameter, rate, tgt_vol, *, md=None):
        # close the shutter
         yield from bps.abs_set(shutter, 'Close', wait=True)
         print('closed shutter')
-        yield from bp.trigger_and_read(dets)
+        yield from bps.trigger_and_read(dets)
 
     def clean_up():
         yield from bps.abs_set(shutter, 'Close', wait=True)
