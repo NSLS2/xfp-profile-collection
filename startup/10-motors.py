@@ -464,6 +464,12 @@ class HT(Device):
 
 ht = HT('XF:17BMA-ES:2{Stg:7-Ax:', name='ht')
 
+class BPM(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+bpm1 = BPM('XF:17BMA-OP{Bpm:1-Ax:', name='bpm1')
+
 #pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
 #feslits2 = InBottomSlits('FE:C17B-OP{Slt:2-Ax:', name='feslits2')
