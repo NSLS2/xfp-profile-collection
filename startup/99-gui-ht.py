@@ -515,7 +515,7 @@ class XFPSampleSelector:
         self.aligning_y.setValue(HT_COORDS['y'][self._slot_index[0]])
 
     def _manual_align_is_checked(self):
-        return (self.checkbox_manual_align.checkState() > 0)
+        return self.checkbox_manual_align.isChecked()
 
     def show_align_fields(self):
         is_hidden = not self._manual_align_is_checked()
