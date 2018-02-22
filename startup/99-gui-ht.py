@@ -446,6 +446,11 @@ class XFPSampleSelector:
         button_toggle_all.toggled.connect(self.toggle_all)
         controls_layout.addWidget(button_toggle_all)
 
+        # A button to move to the load position:
+        self.button_load_pos = button_load_pos = QtWidgets.QPushButton('Move to load position')
+        button_load_pos.clicked.connect(self.move_to_load_position)
+        controls_layout.addWidget(button_load_pos)
+
         # Group of widgets for aligning of the holder:
         self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align the holder:')
 
@@ -509,6 +514,9 @@ class XFPSampleSelector:
         # self.update_location(slot_align_x, slot_align_y)
         self.h_pos = h_pos
         self.v_pos = v_pos
+
+    def move_to_load_position(self):
+        RE(bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y))  # load position
 
     def align_reset(self):
         self.aligning_x.setValue(HT_COORDS['x'][self._slot_index[0]])
