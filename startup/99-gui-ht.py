@@ -324,9 +324,6 @@ class RunEngineControls:
         # label.setStyleSheet('QLabel {background-color: green; color: white}')
         button_layout.addWidget(info_label)
 
-        # Input fields to control center of a slot
-        
-
         self.RE.state_hook = self.handle_state_change
         self.handle_state_change(self.RE.state, None)
 
