@@ -324,6 +324,9 @@ class RunEngineControls:
         # label.setStyleSheet('QLabel {background-color: green; color: white}')
         button_layout.addWidget(info_label)
 
+        # Input fields to control center of a slot
+        
+
         self.RE.state_hook = self.handle_state_change
         self.handle_state_change(self.RE.state, None)
 
@@ -381,13 +384,15 @@ class RunEngineControls:
 
 
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8):
+    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=-96, load_pos_y=-50):
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
 
         self._slot_index = slot_index
         self._rows = rows
         self._cols = cols
+        self.load_pos_x = load_pos_x
+        self.load_pos_y = load_pos_y
 
         # Main widget:
         mw = QtWidgets.QWidget()
@@ -441,20 +446,81 @@ class XFPSampleSelector:
         button_toggle_all.toggled.connect(self.toggle_all)
         controls_layout.addWidget(button_toggle_all)
 
-        # Button to align the holder:
+        # Group of widgets for aligning of the holder:
+        self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align the holder:')
+
+        self.align_layout = align_layout = QtWidgets.QVBoxLayout()
+        self.align_controls_layout = align_controls_layout = QtWidgets.QHBoxLayout()
+        self.align_fields_layout = align_fields_layout = QtWidgets.QHBoxLayout()
+
+        align_layout.addLayout(align_controls_layout)
+        align_layout.addLayout(align_fields_layout)
+        
+        self.align_controls_layout.setAlignment(QtCore.Qt.AlignTop)
+
+        # Align button:
         button_align = QtWidgets.QPushButton('Align')
         button_align.clicked.connect(self.align_ht)
-        controls_layout.addWidget(button_align)
+
+        # Checkbox to hide the input fields:
+        self.checkbox_manual_align = QtWidgets.QCheckBox('Manual alignment')
+        self.checkbox_manual_align.setChecked(False)
+        self.checkbox_manual_align.setCheckable(True)
+        self.checkbox_manual_align.toggled.connect(self.show_align_fields)
+
+        # Align fields:
+        self.aligning_x_label = aligning_x_label = QtWidgets.QLabel('X:')
+        self.aligning_y_label = aligning_y_label = QtWidgets.QLabel('Y:')
+
+        self.aligning_x = aligning_x = QtWidgets.QDoubleSpinBox()
+        self.aligning_x.setMinimum(-97.5)
+        self.aligning_x.setMaximum(97.5)
+
+        self.aligning_y = aligning_y = QtWidgets.QDoubleSpinBox()
+        self.aligning_y.setMinimum(-99.5)
+        self.aligning_y.setMaximum(99.5)
+
+        self.align_reset()
+
+        self.align_reset_button = align_reset_button = QtWidgets.QPushButton('Reset')
+        align_reset_button.clicked.connect(self.align_reset)
+
+        # Add the button and the fields to the layout:
+        for w in [button_align, self.checkbox_manual_align]:
+            align_controls_layout.addWidget(w)
+
+        for w in [aligning_x_label, aligning_x, aligning_y_label, aligning_y, align_reset_button]:
+            align_fields_layout.addWidget(w)
+        align_fields_layout.addStretch()
+
+        # Initial hiding of the input fields for alignment:
+        self.show_align_fields()
+
+        aligning_group.setLayout(align_layout)
+        controls_layout.addWidget(aligning_group)
+        aligning_group.setMaximumHeight(100)
 
         main_layout.addLayout(controls_layout)
-
+        
         mw.setLayout(main_layout)
         window.setCentralWidget(mw)
-
+        
         # TODO: update it during next major refactor:
         # self.update_location(slot_align_x, slot_align_y)
         self.h_pos = h_pos
         self.v_pos = v_pos
+
+    def align_reset(self):
+        self.aligning_x.setValue(HT_COORDS['x'][self._slot_index[0]])
+        self.aligning_y.setValue(HT_COORDS['y'][self._slot_index[0]])
+
+    def _manual_align_is_checked(self):
+        return (self.checkbox_manual_align.checkState() > 0)
+
+    def show_align_fields(self):
+        is_hidden = not self._manual_align_is_checked()
+        for w in [self.aligning_x_label, self.aligning_x, self.aligning_y_label, self.aligning_y, self.align_reset_button]:
+            w.setHidden(is_hidden)
 
     def walk_values(self, snake=True):
         rows = self._rows
@@ -504,7 +570,11 @@ class XFPSampleSelector:
             column.indicator.setEnabled(True)
 
     def align_ht(self):
-        RE(align_ht())
+        kwargs = {}
+        if self._manual_align_is_checked():
+            kwargs['x_start'] = self.aligning_x.value()
+            kwargs['y_start'] = self.aligning_y.value()
+        RE(align_ht(**kwargs))
 
     def set_test(self):
         for i in [(0, 10), (2, 20), (29, 30)]:
@@ -525,7 +595,7 @@ class XFPSampleSelector:
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
-            yield from bps.mv(ht.x, -96, ht.y, -50)
+            yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
 
         def main_plan(file_name):
             reason = self.path_select.short_desc.displayText()
@@ -637,5 +707,4 @@ x_pos = HT_COORDS['x']
 y_pos = HT_COORDS['y']
 
 HTgui = XFPSampleSelector(x_pos, y_pos)
-
 
