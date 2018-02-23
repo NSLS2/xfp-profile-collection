@@ -5,48 +5,46 @@ from bluesky.callbacks.fitting import PeakStats
 HT_X_START = 8.72
 HT_Y_START = -89.72
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
+HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 
 
-def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3):
+def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True):
     """Align high-throughput sample holder.
 
         x_start : horizontal start position
         y_start : vertical start position
         md : optional metadata information
     """
+    global PS_X, PS_Y, HT_COORDS, HT_COORDS_OLD
+    if run:
+        yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
 
-    yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
+        # Find uid and peak stats for horizontal calibration:
+        uid, PS_X = yield from _align_ht('horizontal', ht.x,
+                                         x_start-offset, x_start+offset, 121,
+                                         md=md)
 
-    # Find uid and peak stats for horizontal calibration:
-    global PS_X, PS_Y, HT_COORDS
+        # Move hor. position to COM before we scan vertical one:
+        yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
 
-    uid, PS_X = yield from _align_ht('horizontal', ht.x,
-                                     x_start-offset, x_start+offset, 121,
-                                     md=md)
-    '''
-    if uid is not None:
-        print('slot {} h shift by {}'.format(
-                j, ps.com-h_pos[j]))
-        h_pos[j] = ps.com
-    '''
+        uid, PS_Y = yield from _align_ht('vertical', ht.y,
+                                         y_start-offset, y_start+offset, 121,
+                                         md=md)
+        # Move both hor. & vert. positions to COM after alignment:
+        yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
 
-    # Move hor. position to COM before we scan vertical one:
-    yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
+        _x_start = PS_X.com
+        _y_start = PS_Y.com
+    else:
+        _x_start = x_start
+        _y_start = y_start
 
-    uid, PS_Y = yield from _align_ht('vertical', ht.y,
-                                     y_start-offset, y_start+offset, 121,
-                                     md=md)
-    '''
-    if uid is not None:
-        print('slot {} v shift by {}'.format(
-             j, ps.com - v_pos[j]))
-        v_pos[j] = ps.com
-    '''
-    HT_COORDS = default_coords(x_start=PS_X.com, y_start=PS_Y.com)
+    if os.path.isfile(HT_COORDS_FILE):
+        os.rename(HT_COORDS_FILE, HT_COORDS_FILE_OLD)
+        HT_COORDS_OLD = HT_COORDS
+
+    HT_COORDS = default_coords(x_start=_x_start, y_start=_y_start)
     HT_COORDS.to_csv(HT_COORDS_FILE, float_format='%.2f')
-
-    # Move both hor. & vert. positions to COM after alignment:
-    yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
 
 
 def default_coords(x_start=HT_X_START, y_start=HT_Y_START, 

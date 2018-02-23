@@ -516,8 +516,12 @@ class XFPSampleSelector:
         RE(bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y))  # load position
 
     def align_reset(self):
-        self.aligning_x.setValue(HT_COORDS['x'][self._slot_index[0]])
-        self.aligning_y.setValue(HT_COORDS['y'][self._slot_index[0]])
+        try:
+            self.aligning_x.setValue(HT_COORDS_OLD['x'][self._slot_index[0]])
+            self.aligning_y.setValue(HT_COORDS_OLD['y'][self._slot_index[0]])
+        except:
+            self.aligning_x.setValue(HT_X_START)
+            self.aligning_y.setValue(HT_Y_START)
 
     def _manual_align_is_checked(self):
         return self.checkbox_manual_align.isChecked()
@@ -579,6 +583,7 @@ class XFPSampleSelector:
         if self._manual_align_is_checked():
             kwargs['x_start'] = self.aligning_x.value()
             kwargs['y_start'] = self.aligning_y.value()
+            kwargs['run'] = False
         RE(align_ht(**kwargs))
 
     def set_test(self):
