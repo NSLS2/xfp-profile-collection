@@ -6,6 +6,8 @@ HT_X_START = 12
 HT_Y_START = -90.2
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
+LOAD_POS_X = -90
+LOAD_POS_Y = -50
 
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True):
@@ -17,24 +19,32 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     """
     global PS_X, PS_Y, HT_COORDS, HT_COORDS_OLD
     if run:
-        yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
+        def close_shutters():
+            yield from bps.mv(shutter, 'Close')
+            yield from bps.mv(pps_shutter, 'Close')
+            yield from bps.mv(ht.x, LOAD_POS_X, ht.y, LOAD_POS_Y)  # load position
 
-        # Find uid and peak stats for horizontal calibration:
-        uid, PS_X = yield from _align_ht('horizontal', ht.x,
-                                         x_start-offset, x_start+offset, 121,
-                                         md=md)
+        def main_plan():
+            yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
 
-        # Move hor. position to COM before we scan vertical one:
-        yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
+            # Find uid and peak stats for horizontal calibration:
+            uid, PS_X = yield from _align_ht('horizontal', ht.x,
+                                             x_start-offset, x_start+offset, 121,
+                                             md=md)
 
-        uid, PS_Y = yield from _align_ht('vertical', ht.y,
-                                         y_start-offset, y_start+offset, 121,
-                                         md=md)
-        # Move both hor. & vert. positions to COM after alignment:
-        yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
+            # Move hor. position to COM before we scan vertical one:
+            yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
 
-        _x_start = PS_X.com
-        _y_start = PS_Y.com
+            uid, PS_Y = yield from _align_ht('vertical', ht.y,
+                                             y_start-offset, y_start+offset, 121,
+                                             md=md)
+            # Move both hor. & vert. positions to COM after alignment:
+            yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
+
+            _x_start = PS_X.com
+            _y_start = PS_Y.com
+        return (yield from bpp.finalize_wrapper(main_plan(),
+                                                close_shutters()))
     else:
         _x_start = x_start
         _y_start = y_start

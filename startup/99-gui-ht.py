@@ -381,7 +381,7 @@ class RunEngineControls:
 
 
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=-90, load_pos_y=-50):
+    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=LOAD_POS_X, load_pos_y=LOAD_POS_Y):
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
 
