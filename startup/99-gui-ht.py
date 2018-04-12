@@ -440,6 +440,8 @@ class XFPSampleSelector:
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
         button_toggle_all.setChecked(True)
+        self.toggle_all(True)
+        self.toggle_all(False)
         button_toggle_all.toggled.connect(self.toggle_all)
         controls_layout.addWidget(button_toggle_all)
 

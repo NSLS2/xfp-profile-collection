@@ -2,8 +2,8 @@ from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
 
-HT_X_START = 8.72
-HT_Y_START = -89.72
+HT_X_START = 9.2
+HT_Y_START = -91
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
@@ -17,7 +17,9 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
         y_start : vertical start position
         md : optional metadata information
     """
-    global HT_COORDS, HT_COORDS_OLD
+    global HT_COORDS, HT_COORDS_OLD, _x_start, _y_start
+    _x_start = None
+    _y_start = None
     if run:
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
@@ -25,7 +27,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
             yield from bps.mv(ht.x, LOAD_POS_X, ht.y, LOAD_POS_Y)  # load position
 
         def main_plan():
-            global PS_X, PS_Y
+            global PS_X, PS_Y, _x_start, _y_start
             yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
             yield from bps.mv(pps_shutter, 'Open')
 
@@ -45,8 +47,9 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
 
             _x_start = PS_X.com
             _y_start = PS_Y.com
-        return (yield from bpp.finalize_wrapper(main_plan(),
-                                                close_shutters()))
+
+        yield from bpp.finalize_wrapper(main_plan(),
+                                        close_shutters())
     else:
         _x_start = x_start
         _y_start = y_start
@@ -112,6 +115,9 @@ def _align_ht(dir_name, mtr,
                      md=_md),
             [lp, ps])
     print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
+
+    ax = plt.gca()
+    ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 
     yield from bps.mv(shutter, 'Close')  # close the protective shutter
     yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
