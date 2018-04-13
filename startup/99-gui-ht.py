@@ -440,7 +440,6 @@ class XFPSampleSelector:
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
         button_toggle_all.setChecked(True)
-        self.toggle_all(True)
         self.toggle_all(False)
         button_toggle_all.toggled.connect(self.toggle_all)
         controls_layout.addWidget(button_toggle_all)
@@ -459,7 +458,7 @@ class XFPSampleSelector:
 
         align_layout.addLayout(align_controls_layout)
         align_layout.addLayout(align_fields_layout)
-        
+
         self.align_controls_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # Align button:
@@ -505,10 +504,10 @@ class XFPSampleSelector:
         aligning_group.setMaximumHeight(100)
 
         main_layout.addLayout(controls_layout)
-        
+
         mw.setLayout(main_layout)
         window.setCentralWidget(mw)
-        
+
         # TODO: update it during next major refactor:
         # self.update_location(slot_align_x, slot_align_y)
         self.h_pos = h_pos
