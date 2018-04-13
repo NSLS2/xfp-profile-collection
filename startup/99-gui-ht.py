@@ -586,6 +586,8 @@ class XFPSampleSelector:
             kwargs['y_start'] = self.aligning_y.value()
             kwargs['run'] = False
         RE(align_ht(**kwargs))
+        self.update_locations(HT_COORDS['x'][self._slot_index[0]],
+                              HT_COORDS['y'][self._slot_index[1]])
 
     def set_test(self):
         for i in [(0, 10), (2, 20), (29, 30)]:
