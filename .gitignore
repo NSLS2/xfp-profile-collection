@@ -5,4 +5,5 @@ db/
 log/
 history.sqlite
 .*.py
-ht_coords.csv
+ht_coords*.csv
+static/

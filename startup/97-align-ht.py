@@ -2,8 +2,8 @@ from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
 
-HT_X_START = 9.2
-HT_Y_START = -90.6
+HT_X_START = 9.8
+HT_Y_START = -91.4
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
@@ -104,7 +104,7 @@ def _align_ht(dir_name, mtr,
     _md.update(md or {})
 
     # fire the fast shutter and wait for it to close again
-    yield from bps.mv(dg, 90)  # generate 90-seconds pulse
+    yield from bps.mv(dg, 600)  # generate 600-seconds pulse
     yield from bps.mv(dg.fire, 1)
     yield from bps.mv(shutter, 'Open')  # open the protective shutter
 
