@@ -10,7 +10,8 @@ LOAD_POS_X = -90
 LOAD_POS_Y = -50
 
 
-def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True):
+def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
+             det=tcm1):
     """Align high-throughput sample holder.
 
         x_start : horizontal start position
@@ -34,14 +35,14 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
             # Find uid and peak stats for horizontal calibration:
             uid, PS_X = yield from _align_ht('horizontal', ht.x,
                                              x_start-offset, x_start+offset, 121,
-                                             md=md)
+                                             md=md, det=det)
 
             # Move hor. position to COM before we scan vertical one:
             yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
 
             uid, PS_Y = yield from _align_ht('vertical', ht.y,
                                              y_start-offset, y_start+offset, 121,
-                                             md=md)
+                                             md=md, det=det)
             # Move both hor. & vert. positions to COM after alignment:
             yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
 
@@ -93,10 +94,11 @@ def default_coords(x_start=HT_X_START, y_start=HT_Y_START,
 
 def _align_ht(dir_name, mtr,
               start, stop, num_points, *,
-              md=None):
+              md=None, det=tcm1):
     fig = plt.figure('align {}'.format(mtr.name))
-    lp = LivePlot('tcm1_val', mtr.name, ax=fig.gca())
-    ps = PeakStats(mtr.name, 'tcm1_val')
+    det_name = list(det.read().keys())[0]
+    lp = LivePlot(f'{det_name}', mtr.name, ax=fig.gca())
+    ps = PeakStats(mtr.name, f'{det_name}')
 
     _md = {'purpose': 'table alignment',
            'plan_name': '_align_ht',
@@ -109,7 +111,7 @@ def _align_ht(dir_name, mtr,
     yield from bps.mv(shutter, 'Open')  # open the protective shutter
 
     uid = yield from bpp.subs_wrapper(
-            bp.scan([tcm1],
+            bp.scan([det],
                      mtr,
                      start, stop, num_points,
                      md=_md),
