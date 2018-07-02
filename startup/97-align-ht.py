@@ -28,6 +28,10 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     _x_start = None
     _y_start = None
     if run:
+        fig = plt.figure('Align with <{}> motor and <{}> detector'.format(ht.name, det.name),
+                         figsize=(16, 5))
+        ax_hor = fig.add_subplot(121)
+        ax_ver = fig.add_subplot(122)
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
@@ -41,14 +45,14 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
             # Find uid and peak stats for horizontal calibration:
             uid, PS_X = yield from _align_ht('horizontal', ht.x,
                                              x_start-offset, x_start+offset, 121,
-                                             md=md, det=det)
+                                             md=md, det=det, ax=ax_hor)
 
             # Move hor. position to COM before we scan vertical one:
             yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
 
             uid, PS_Y = yield from _align_ht('vertical', ht.y,
                                              y_start-offset, y_start+offset, 121,
-                                             md=md, det=det)
+                                             md=md, det=det, ax=ax_ver)
             # Move both hor. & vert. positions to COM after alignment:
             yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
 
@@ -100,10 +104,9 @@ def default_coords(x_start=HT_X_START, y_start=HT_Y_START,
 
 def _align_ht(dir_name, mtr,
               start, stop, num_points, *,
-              md=None, det=tcm1):
-    fig = plt.figure('align {}'.format(mtr.name))
+              md=None, det=tcm1, ax=None):
     det_name = list(det.read().keys())[0]
-    lp = LivePlot(f'{det_name}', mtr.name, ax=fig.gca())
+    lp = LivePlot(f'{det_name}', mtr.name, ax=ax)
     ps = PeakStats(mtr.name, f'{det_name}')
 
     _md = {'purpose': 'table alignment',
@@ -124,7 +127,6 @@ def _align_ht(dir_name, mtr,
             [lp, ps])
     print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
 
-    ax = plt.gca()
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 
     yield from bps.mv(shutter, 'Close')  # close the protective shutter

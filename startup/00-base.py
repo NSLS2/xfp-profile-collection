@@ -15,7 +15,7 @@ nslsii.configure_base(get_ipython().user_ns, 'xfp', bec=False)
 
 # Best effort callback to print a table and show a live plot
 bec = BestEffortCallback()
-RE.subscribe(bec)
+# RE.subscribe(bec)
 
 # nice format string to use in various places
 _time_fmtstr = '%Y-%m-%d %H:%M:%S'
