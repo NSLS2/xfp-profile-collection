@@ -9,6 +9,9 @@ HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
 LOAD_POS_Y = -50
 
+#TODO: add qem2 once it's repared
+ALIGN_DETS = {x.name: x for x in [tcm1, qem1]}
+
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
              det=tcm1):
@@ -18,6 +21,9 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
         y_start : vertical start position
         md : optional metadata information
     """
+    assert det in ALIGN_DETS.values(), \
+        f'The detector for alignment should be one of {list(ALIGN_DETS.keys())}'
+
     global HT_COORDS, HT_COORDS_OLD, _x_start, _y_start
     _x_start = None
     _y_start = None

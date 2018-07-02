@@ -39,6 +39,9 @@ class ESMQuadEM(QuadEM):
             cur.mean_value = Kind.hinted
 
 
-qem = ESMQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem01")
-qem.read_attrs = ['current3', 'current3.mean_value']
+qem1 = ESMQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
+#TODO: add later when it's repared
+# qem2 = ESMQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
+for det in [qem1]:
+    det.read_attrs = ['current3', 'current3.mean_value']
 _

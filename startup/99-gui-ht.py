@@ -465,6 +465,10 @@ class XFPSampleSelector:
         button_align = QtWidgets.QPushButton('Align')
         button_align.clicked.connect(self.align_ht)
 
+        # Combo box for selection of the detectors to be used for alignment:
+        self.dets_combo = QtWidgets.QComboBox()
+        self.dets_combo.addItems(ALIGN_DETS.keys())
+
         # Checkbox to hide the input fields:
         self.checkbox_manual_align = QtWidgets.QCheckBox('Manual alignment')
         self.checkbox_manual_align.setChecked(False)
@@ -489,7 +493,7 @@ class XFPSampleSelector:
         align_reset_button.clicked.connect(self.align_reset)
 
         # Add the button and the fields to the layout:
-        for w in [button_align, self.checkbox_manual_align]:
+        for w in [button_align, self.dets_combo, self.checkbox_manual_align]:
             align_controls_layout.addWidget(w)
 
         for w in [aligning_x_label, aligning_x, aligning_y_label, aligning_y, align_reset_button]:
@@ -580,12 +584,14 @@ class XFPSampleSelector:
             column.indicator.setEnabled(True)
 
     def align_ht(self):
-        kwargs = {}
+        kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
         if self._manual_align_is_checked():
             kwargs['x_start'] = self.aligning_x.value()
             kwargs['y_start'] = self.aligning_y.value()
             kwargs['run'] = False
+        self.dets_combo.setEnabled(False)
         RE(align_ht(**kwargs))
+        self.dets_combo.setEnabled(True)
         self.update_locations(HT_COORDS['x'][self._slot_index[0]],
                               HT_COORDS['y'][self._slot_index[1]])
 
