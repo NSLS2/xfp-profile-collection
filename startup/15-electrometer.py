@@ -1,6 +1,8 @@
 from ophyd import Signal, EpicsSignalWithRBV, Component as Cpt
 from ophyd.areadetector import ADBase
 from ophyd.quadem import QuadEM 
+from ophyd import DynamicDeviceComponent as DDCpt
+from collections import OrderedDict
 
 
 class QuadEMPort(ADBase):
@@ -11,10 +13,21 @@ class QuadEMPort(ADBase):
         self.port_name.put(port_name)
 
 
-class ESMQuadEM(QuadEM):
+def _proc_current_fields(attr_base, field_base, range_, **kwargs):
+    defn = OrderedDict()
+    for i in range_:
+        attr = '{attr}{i}'.format(attr=attr_base, i=i)
+        suffix = '{field}{i}.PROC'.format(field=field_base, i=i)
+        defn[attr] = (EpicsSignal, suffix, kwargs)
+
+    return defn
+
+
+class XFPQuadEM(QuadEM):
     conf = Cpt(QuadEMPort, port_name="EM180")
     em_range = Cpt(EpicsSignalWithRBV, "Range", string=True)
-
+    current_offset_calcs = DDCpt(_proc_current_fields('ch', 'ComputeCurrentOffset',
+                                                      range(1, 5)))
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs.update([(self.acquire_mode, "Single")])  # single mode
@@ -39,9 +52,9 @@ class ESMQuadEM(QuadEM):
             cur.mean_value = Kind.hinted
 
 
-qem1 = ESMQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
+qem1 = XFPQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
 #TODO: add later when it's repared
-# qem2 = ESMQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
+# qem2 = XFPQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
 for det in [qem1]:
     det.read_attrs = ['current3', 'current3.mean_value']
 _
