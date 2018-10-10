@@ -617,6 +617,8 @@ class XFPSampleSelector:
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
 
         def main_plan(file_name):
+            self.toggle_all(False)
+            self.toggle_all(True)
             reason = self.path_select.short_desc.displayText()
             run_notes = self.path_select.notes.toPlainText()
             if file_name is None:
@@ -657,10 +659,17 @@ class XFPSampleSelector:
                 yield from bps.wait('ht')
 
                 self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
+
+                if pps_shutter.read()['pps_shutter_status']['value'] == 'Not Open':
+                    raise Exception('pps_shutter must be open to finish the scan')
+                if not self.checkbox_shutter.isChecked() and shutter.read()['shutter_status']['value'] == 'Not Open':
+                    raise Exception('preshutter must be open to finish the scan')
+
+                uid = (yield from xfp_plan_fast_shutter(d,
+                                                        shutter_per_slot=self.checkbox_shutter.isChecked()))
+
                 self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
 
-                uid = (yield from xfp_plan_fast_shutter(
-                    d, shutter_per_slot=self.checkbox_shutter.isChecked()))
                 print(f'UID from xfp_plan_fast_shutter(): {uid}')
                 if uid is not None:
                     uid_list.append(uid)
