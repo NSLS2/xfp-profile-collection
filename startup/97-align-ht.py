@@ -3,14 +3,15 @@ from bluesky.callbacks.fitting import PeakStats
 
 
 HT_X_START = 9.2
-HT_Y_START = -90.5
+HT_Y_START = -91.7
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
 LOAD_POS_Y = -50
 
 #TODO: add qem2 once it's repared
-ALIGN_DETS = {x.name: x for x in [tcm1, qem1]}
+QUADEM_DETS = [qem1]
+ALIGN_DETS = {x.name: x for x in QUADEM_DETS + [tcm1]}
 
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
@@ -41,6 +42,8 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
             global PS_X, PS_Y, _x_start, _y_start
             yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
             yield from bps.mv(pps_shutter, 'Open')
+            if det.name in QUADEM_DETS:
+                yield from bps.mv(getattr(det.current_offset_calcs, f'ch{det.read_attrs[0].replace("current", "")}'), 1)
 
             # Find uid and peak stats for horizontal calibration:
             uid, PS_X = yield from _align_ht('horizontal', ht.x,
