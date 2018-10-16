@@ -3,12 +3,6 @@ import datetime
 from ophyd import (EpicsMotor, Device,
                    Component as Cpt, EpicsSignal,
                    EpicsSignalRO, DeviceStatus)
-from nslsii.devices import TwoButtonShutter
-
-
-shutter = TwoButtonShutter('XF:17BMA-EPS{Sh:1}', name='shutter')
-pps_shutter = TwoButtonShutter('XF:17BM-PPS{Sh:FE}', name='pps_shutter')
-
 
 class Slits(Device):
     top = Cpt(EpicsMotor, 'T}Mtr')

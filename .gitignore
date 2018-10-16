@@ -7,3 +7,4 @@ history.sqlite
 .*.py
 ht_coords*.csv
 static/
+startup/examples/
