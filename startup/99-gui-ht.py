@@ -430,11 +430,19 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.path_select.widget)
         controls_layout.addWidget(self.re_controls.widget)
 
+        # Combo box for selection of the shutters:
+        self.shutters = {'Preshutter': pre_shutter,
+                         'GalvoShutter': galvo_shutter,
+                         'None': None}
+        self.shutters_combo = QtWidgets.QComboBox()
+        self.shutters_combo.addItems(self.shutters.keys())
+        controls_layout.addWidget(self.shutters_combo)
+
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
-        self.checkbox_shutter.setChecked(True)
-        self.checkbox_shutter.setCheckable(True)
-        controls_layout.addWidget(self.checkbox_shutter)
+        # self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
+        # self.checkbox_shutter.setChecked(True)
+        # self.checkbox_shutter.setCheckable(True)
+        # controls_layout.addWidget(self.checkbox_shutter)
 
         # Test mode:
         self.checkbox_test_mode = QtWidgets.QCheckBox('Test mode')
@@ -469,8 +477,8 @@ class XFPSampleSelector:
         self.align_controls_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # Align button:
-        button_align = QtWidgets.QPushButton('Align')
-        button_align.clicked.connect(self.align_ht)
+        self.button_align = QtWidgets.QPushButton('Align')
+        self.button_align.clicked.connect(self.align_ht)
 
         # Combo box for selection of the detectors to be used for alignment:
         self.dets_combo = QtWidgets.QComboBox()
@@ -500,7 +508,7 @@ class XFPSampleSelector:
         align_reset_button.clicked.connect(self.align_reset)
 
         # Add the button and the fields to the layout:
-        for w in [button_align, self.dets_combo, self.checkbox_manual_align]:
+        for w in [self.button_align, self.dets_combo, self.checkbox_manual_align]:
             align_controls_layout.addWidget(w)
 
         for w in [aligning_x_label, aligning_x, aligning_y_label, aligning_y, align_reset_button]:
@@ -586,9 +594,14 @@ class XFPSampleSelector:
         return self.window.close()
 
     def toggle_all(self, state):
-        for column in self.slots:
-            column.cb.setChecked(state and column.sb.value() > 0)
-            column.indicator.setEnabled(True)
+        for slot in self.slots:
+            slot.cb.setChecked(state and slot.sb.value() > 0)
+            slot.indicator.setEnabled(True)
+
+    def reset_colors(self):
+        for slot in self.slots:
+            if slot.cb.isChecked():
+                slot.change_color(COLOR_SELECTED)
 
     def reset_colors(self):
         for slot in self.slots:
@@ -599,6 +612,7 @@ class XFPSampleSelector:
         mode.test_mode = state
 
     def align_ht(self):
+        self.button_align.setDisabled(True)
         kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
         if self._manual_align_is_checked():
             kwargs['x_start'] = self.aligning_x.value()
@@ -609,8 +623,11 @@ class XFPSampleSelector:
         self.dets_combo.setEnabled(True)
         self.update_locations(HT_COORDS['x'][self._slot_index[0]],
                               HT_COORDS['y'][self._slot_index[1]])
+        self.button_align.setDisabled(False)
 
     def set_test(self):
+        self.checkbox_test_mode.setChecked(True)
+        self.switch_test_mode(True)
         for i in [(0, 10), (2, 20), (29, 30)]:
             column = self.slots[i[0]]
             column.cb.setChecked(True)
@@ -624,12 +641,27 @@ class XFPSampleSelector:
         self.h_pos = d['x']
         self.v_pos = d['y']
 
+    def get_selected_shutter(self):
+        ct = self.shutters_combo.currentText()
+        return (ct, self.shutters[ct])
+
     def plan(self, file_name=None):
+        self.shutters_combo.setDisabled(True)
+
+        selected_shutter_name, selected_shutter = self.get_selected_shutter()
 
         def close_shutters():
-            yield from bps.mv(pre_shutter, 'Close')
+            if selected_shutter_name != 'None':
+                if selected_shutter_name == 'GalvoShutter':
+                    yield from bps.mv(self.shutters['Preshutter'], 'Close')
+                    yield from bps.mv(selected_shutter, 'Close')
+                else:
+                    yield from bps.mv(selected_shutter, 'Close')
+            else:
+                pass
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
+            self.shutters_combo.setDisabled(False)
 
         def main_plan(file_name):
             # Reset colors to the COLOR_SELECTED before each run:
@@ -651,6 +683,14 @@ class XFPSampleSelector:
 
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Open')
+
+            if selected_shutter_name == 'None':
+                yield from bps.mv(self.shutters['Preshutter'], 'Open')
+                yield from bps.mv(self.shutters['GalvoShutter'], 'Open')
+            elif selected_shutter_name == 'GalvoShutter':
+                yield from bps.mv(self.shutters['Preshutter'], 'Open')
+            else:
+                pass
 
             for gui_d in self.walk_values():
                 d = dict(base_md)
@@ -684,8 +724,13 @@ class XFPSampleSelector:
                     if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
                         raise Exception(f'{pre_shutter.name} must be open to finish the scan')
 
+                if selected_shutter:
+                    shutter_per_slot = True
+                else:
+                    shutter_per_slot = False
                 uid = (yield from xfp_plan_fast_shutter(d,
-                                                        shutter_per_slot=self.checkbox_shutter.isChecked()))
+                                                        shutter_per_slot=shutter_per_slot,
+                                                        selected_shutter=selected_shutter))
 
                 self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
 
@@ -695,9 +740,12 @@ class XFPSampleSelector:
 
                 yield from bps.checkpoint()
 
-            # Close it once the walkthrough is done:
-            if not self.checkbox_shutter.isChecked():
-                yield from bps.mv(shutter, 'Close')
+            if selected_shutter_name != 'None':
+                if selected_shutter_name == 'GalvoShutter':
+                    yield from bps.mv(self.shutters['Preshutter'], 'Close')
+                    yield from bps.mv(selected_shutter, 'Close')
+                else:
+                    yield from bps.mv(selected_shutter, 'Close')
 
             yield from bps.mv(pps_shutter, 'Close')
 
@@ -722,19 +770,21 @@ def motors_positions(motors):
     return '\n'.join(format_str).format(*motor_values)
 
 
-def xfp_plan_fast_shutter(d, shutter_per_slot):
-    exp_time = d['exposure']/1000
+def xfp_plan_fast_shutter(d, shutter_per_slot, selected_shutter):
+    exp_time = d['exposure'] / 1000
     yield from bps.mv(dg, exp_time)
 
-    if shutter_per_slot:
-        yield from bps.mv(pre_shutter, 'Open')
+    if shutter_per_slot and selected_shutter:
+        # open the protective shutter
+        yield from bps.mv(selected_shutter, 'Open')
 
     # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg.fire, 1)
-    yield from bps.sleep(exp_time*1.1)
+    yield from bps.sleep(exp_time * 1.1)
 
-    if shutter_per_slot:
-        yield from bps.mv(pre_shutter, 'Close')
+    if shutter_per_slot and selected_shutter:
+        # close the protective shutter
+        yield from bps.mv(selected_shutter, 'Close')
 
     return (yield from bp.count([ht.x, ht.y], md=d))
 
