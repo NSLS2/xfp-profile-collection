@@ -33,7 +33,7 @@ mode = TestMode(test_mode=False)
 
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
-             det=tcm1, use_galvo_shutter=False):
+             det=tcm1):
     """Align high-throughput sample holder.
 
         x_start : horizontal start position
@@ -67,14 +67,14 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
             # Find uid and peak stats for horizontal calibration:
             uid, PS_X = yield from _align_ht('horizontal', ht.x,
                                              x_start-offset, x_start+offset, 121,
-                                             md=md, det=det, ax=ax_hor, use_galvo_shutter=use_galvo_shutter)
+                                             md=md, det=det, ax=ax_hor)
 
             # Move hor. position to COM before we scan vertical one:
             yield from bps.mv(ht.x, PS_X.com, ht.y, y_start-offset)
 
             uid, PS_Y = yield from _align_ht('vertical', ht.y,
                                              y_start-offset, y_start+offset, 121,
-                                             md=md, det=det, ax=ax_ver, use_galvo_shutter=use_galvo_shutter)
+                                             md=md, det=det, ax=ax_ver)
             # Move both hor. & vert. positions to COM after alignment:
             yield from bps.mv(ht.x, PS_X.com, ht.y, PS_Y.com)
 
@@ -126,7 +126,7 @@ def default_coords(x_start=HT_X_START, y_start=HT_Y_START,
 
 def _align_ht(dir_name, mtr,
               start, stop, num_points, *,
-              md=None, det=tcm1, ax=None, use_galvo_shutter=False):
+              md=None, det=tcm1, ax=None):
     det_name = list(det.read().keys())[0]
     lp = LivePlot(f'{det_name}', mtr.name, ax=ax)
     ps = PeakStats(mtr.name, f'{det_name}')
@@ -136,14 +136,9 @@ def _align_ht(dir_name, mtr,
            'dir_name': dir_name}
     _md.update(md or {})
 
-    if not use_galvo_shutter:
-        # fire the fast shutter and wait for it to close again
-        yield from bps.mv(dg, 600)  # generate 600-seconds pulse
-        yield from bps.mv(dg.fire, 1)
-    else:
-        # TODO: check with BL staff this is correct!
-        yield from bps.mv(galvo_shutter, 'Open')
-
+    # fire the fast shutter and wait for it to close again
+    yield from bps.mv(dg, 600)  # generate 600-seconds pulse
+    yield from bps.mv(dg.fire, 1)
     yield from bps.mv(shutter, 'Open')  # open the protective shutter
 
     uid = yield from bpp.subs_wrapper(
@@ -157,11 +152,7 @@ def _align_ht(dir_name, mtr,
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 
     yield from bps.mv(shutter, 'Close')  # close the protective shutter
-    if not use_galvo_shutter:
-        yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
-    else:
-        # TODO: check with BL staff this is correct!
-        yield from bps.mv(galvo_shutter, 'Close')
+    yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
 
     yield from bps.checkpoint()
 
