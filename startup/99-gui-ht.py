@@ -328,7 +328,7 @@ class RunEngineControls:
         self.handle_state_change(self.RE.state, None)
 
     def run(self):
-        if EpicsSignalRO(pps_shutter.enabled_status.pvname).value == 0:
+        if EpicsSignalRO(pps_shutter.enabled_status.pvname).value == 0 and not mode.test_mode:
             self.label.setText('Shutter\nnot\nenabled')
             self.label.setStyleSheet(f'QLabel {{background-color: red; color: white}}')
         else:
@@ -435,6 +435,13 @@ class XFPSampleSelector:
         self.checkbox_shutter.setChecked(True)
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
+
+        # Test mode:
+        self.checkbox_test_mode = QtWidgets.QCheckBox('Test mode')
+        self.checkbox_test_mode.setChecked(mode.test_mode)
+        self.checkbox_test_mode.setCheckable(True)
+        self.checkbox_test_mode.clicked.connect(self.switch_test_mode)
+        controls_layout.addWidget(self.checkbox_test_mode)
 
         # Check/Uncheck button:
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
@@ -583,6 +590,9 @@ class XFPSampleSelector:
             column.cb.setChecked(state and column.sb.value() > 0)
             column.indicator.setEnabled(True)
 
+    def switch_test_mode(self, state):
+        mode.test_mode = state
+
     def align_ht(self):
         kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
         if self._manual_align_is_checked():
@@ -633,7 +643,8 @@ class XFPSampleSelector:
             if reason:
                 base_md['reason'] = reason
 
-            yield from bps.mv(pps_shutter, 'Open')
+            if not mode.test_mode:
+                yield from bps.mv(pps_shutter, 'Open')
 
             if not self.checkbox_shutter.isChecked():
                 # open the protective shutter
@@ -660,10 +671,11 @@ class XFPSampleSelector:
 
                 self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
-                if pps_shutter.read()['pps_shutter_status']['value'] == 'Not Open':
-                    raise Exception('pps_shutter must be open to finish the scan')
-                if not self.checkbox_shutter.isChecked() and shutter.read()['shutter_status']['value'] == 'Not Open':
-                    raise Exception('preshutter must be open to finish the scan')
+                if not mode.test_mode:
+                    if pps_shutter.read()['pps_shutter_status']['value'] == 'Not Open':
+                        raise Exception('pps_shutter must be open to finish the scan')
+                    if not self.checkbox_shutter.isChecked() and shutter.read()['shutter_status']['value'] == 'Not Open':
+                        raise Exception('preshutter must be open to finish the scan')
 
                 uid = (yield from xfp_plan_fast_shutter(d,
                                                         shutter_per_slot=self.checkbox_shutter.isChecked()))

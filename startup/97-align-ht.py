@@ -14,6 +14,24 @@ QUADEM_DETS = [qem1]
 ALIGN_DETS = {x.name: x for x in QUADEM_DETS + [tcm1]}
 
 
+class TestMode:
+    def __init__(self, test_mode=False):
+        self._test_mode = test_mode
+        self._valid_values = (True, False)
+
+    @property
+    def test_mode(self):
+        return self._test_mode
+
+    @test_mode.setter
+    def test_mode(self, test_mode):
+        assert any([test_mode is x for x in self._valid_values]), \
+            f'The value should be one of {self._valid_values}'
+        self._test_mode = test_mode
+
+mode = TestMode(test_mode=False)
+
+
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
              det=tcm1):
     """Align high-throughput sample holder.
@@ -41,7 +59,8 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
         def main_plan():
             global PS_X, PS_Y, _x_start, _y_start
             yield from bps.mv(ht.x, x_start-offset, ht.y, y_start)
-            yield from bps.mv(pps_shutter, 'Open')
+            if not mode.test_mode:
+                yield from bps.mv(pps_shutter, 'Open')
             if det.name in QUADEM_DETS:
                 yield from bps.mv(getattr(det.current_offset_calcs, f'ch{det.read_attrs[0].replace("current", "")}'), 1)
 
