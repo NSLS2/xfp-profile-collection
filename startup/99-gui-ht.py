@@ -590,6 +590,11 @@ class XFPSampleSelector:
             column.cb.setChecked(state and column.sb.value() > 0)
             column.indicator.setEnabled(True)
 
+    def reset_colors(self):
+        for slot in self.slots:
+            if slot.cb.isChecked():
+                slot.change_color(COLOR_SELECTED)
+
     def switch_test_mode(self, state):
         mode.test_mode = state
 
@@ -622,13 +627,14 @@ class XFPSampleSelector:
     def plan(self, file_name=None):
 
         def close_shutters():
-            yield from bps.mv(shutter, 'Close')
+            yield from bps.mv(pre_shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
 
         def main_plan(file_name):
-            self.toggle_all(False)
-            self.toggle_all(True)
+            # Reset colors to the COLOR_SELECTED before each run:
+            self.reset_colors()
+
             reason = self.path_select.short_desc.displayText()
             run_notes = self.path_select.notes.toPlainText()
             if file_name is None:
@@ -645,10 +651,6 @@ class XFPSampleSelector:
 
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Open')
-
-            if not self.checkbox_shutter.isChecked():
-                # open the protective shutter
-                yield from bps.mv(shutter, 'Open')
 
             for gui_d in self.walk_values():
                 d = dict(base_md)
@@ -671,11 +673,16 @@ class XFPSampleSelector:
 
                 self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
+                # Open it once, when the holder arrives to the first scanning point:
+                if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked():
+                    yield from bps.mv(pre_shutter, 'Open')
+
+                # Check that the shutters are opened before collecting data:
                 if not mode.test_mode:
-                    if pps_shutter.read()['pps_shutter_status']['value'] == 'Not Open':
-                        raise Exception('pps_shutter must be open to finish the scan')
-                    if not self.checkbox_shutter.isChecked() and shutter.read()['shutter_status']['value'] == 'Not Open':
-                        raise Exception('preshutter must be open to finish the scan')
+                    if pps_shutter.status.get() == 'Not Open':
+                        raise Exception(f'{pps_shutter.name} must be open to finish the scan')
+                    if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
+                        raise Exception(f'{pre_shutter.name} must be open to finish the scan')
 
                 uid = (yield from xfp_plan_fast_shutter(d,
                                                         shutter_per_slot=self.checkbox_shutter.isChecked()))
@@ -688,8 +695,8 @@ class XFPSampleSelector:
 
                 yield from bps.checkpoint()
 
+            # Close it once the walkthrough is done:
             if not self.checkbox_shutter.isChecked():
-                # close the protective shutter
                 yield from bps.mv(shutter, 'Close')
 
             yield from bps.mv(pps_shutter, 'Close')
@@ -720,16 +727,14 @@ def xfp_plan_fast_shutter(d, shutter_per_slot):
     yield from bps.mv(dg, exp_time)
 
     if shutter_per_slot:
-        # open the protective shutter
-        yield from bps.mv(shutter, 'Open')
+        yield from bps.mv(pre_shutter, 'Open')
 
     # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg.fire, 1)
     yield from bps.sleep(exp_time*1.1)
 
     if shutter_per_slot:
-        # close the protective shutter
-        yield from bps.mv(shutter, 'Close')
+        yield from bps.mv(pre_shutter, 'Close')
 
     return (yield from bp.count([ht.x, ht.y], md=d))
 
