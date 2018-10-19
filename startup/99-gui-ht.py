@@ -721,8 +721,9 @@ class XFPSampleSelector:
                 if not mode.test_mode:
                     if pps_shutter.status.get() == 'Not Open':
                         raise Exception(f'{pps_shutter.name} must be open to finish the scan')
-                    if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
-                        raise Exception(f'{pre_shutter.name} must be open to finish the scan')
+                    if selected_shutter:
+                        if selected_shutter.read()[f'{selected_shutter.name}_status']['value'] in ['Not Open', 'Closed']:
+                            raise Exception(f'{selected_shutter.name} must be open to finish the scan')
 
                 if selected_shutter:
                     shutter_per_slot = True
