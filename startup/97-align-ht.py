@@ -25,7 +25,8 @@ class TestMode:
 
     @test_mode.setter
     def test_mode(self, test_mode):
-        assert  any([test_mode is x for x in self._valid_values]), f'The value should be one of {self._valid_values}'
+        assert any([test_mode is x for x in self._valid_values]), \
+            f'The value should be one of {self._valid_values}'
         self._test_mode = test_mode
 
 mode = TestMode(test_mode=False)
