@@ -436,6 +436,13 @@ class XFPSampleSelector:
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
 
+        # Test mode:
+        self.checkbox_test_mode = QtWidgets.QCheckBox('Test mode')
+        self.checkbox_test_mode.setChecked(mode.test_mode)
+        self.checkbox_test_mode.setCheckable(True)
+        self.checkbox_test_mode.clicked.connect(self.switch_test_mode)
+        controls_layout.addWidget(self.checkbox_test_mode)
+
         # Check/Uncheck button:
         button_toggle_all = QtWidgets.QPushButton('Check/Uncheck')
         button_toggle_all.setCheckable(True)
@@ -582,6 +589,9 @@ class XFPSampleSelector:
         for column in self.slots:
             column.cb.setChecked(state and column.sb.value() > 0)
             column.indicator.setEnabled(True)
+
+    def switch_test_mode(self, state):
+        mode.test_mode = state
 
     def align_ht(self):
         kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
