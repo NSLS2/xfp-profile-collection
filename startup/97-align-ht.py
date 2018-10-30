@@ -144,11 +144,9 @@ def _align_ht(dir_name, mtr,
     yield from bps.mv(dg, 600)  # generate 600-seconds pulse
     yield from bps.mv(dg.fire, 1)
 
+    yield from bps.mv(pre_shutter, 'Open')
     if use_galvo_shutter:
-        yield from bps.mv(pre_shutter, 'Open')
         yield from bps.mv(galvo_shutter, 'Open')
-    else:
-        yield from bps.mv(pre_shutter, 'Open')
 
     uid = yield from bpp.subs_wrapper(
             bp.scan([det],
@@ -161,11 +159,9 @@ def _align_ht(dir_name, mtr,
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 
     
+    yield from bps.mv(pre_shutter, 'Close')
     if use_galvo_shutter:
-        yield from bps.mv(pre_shutter, 'Close')
         yield from bps.mv(galvo_shutter, 'Close')
-    else:
-        yield from bps.mv(pre_shutter, 'Close')
 
     yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
 

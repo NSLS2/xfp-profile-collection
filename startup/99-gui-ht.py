@@ -608,6 +608,14 @@ class XFPSampleSelector:
     def align_ht(self):
         self.button_align.setDisabled(True)
         kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
+
+        # Pass a flag if galvo_shutter is selected:
+        selected_shutter_name, selected_shutter = self.get_selected_shutter()
+        if selected_shutter_name == 'GalvoShutter':
+            kwargs['use_galvo_shutter'] = True
+        else:
+            kwargs['use_galvo_shutter'] = False
+
         if self._manual_align_is_checked():
             kwargs['x_start'] = self.aligning_x.value()
             kwargs['y_start'] = self.aligning_y.value()
