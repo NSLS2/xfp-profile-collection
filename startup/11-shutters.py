@@ -52,6 +52,8 @@ class XFPGalvoShutter(Device):
         return st
 
     def stop(self, success):
+        # MR: commenting out on 10/30/2018 for manual control of the shutters (see #10).
+        '''
         import time
         prev_st = self._set_st
         if prev_st is not None:
@@ -61,6 +63,8 @@ class XFPGalvoShutter(Device):
         st = self.set('Close')
         while not st.done:
             time.sleep(.5)
+        '''
+        pass
 
     def resume(self):
         import time
@@ -84,9 +88,14 @@ class XFPGalvoShutter(Device):
         self.read_attrs = ['status']
 
 
+# MR: get rid of the stop() method on 10/30/2018 for manual control of the shutters (see #10).
+class TwoButtonShutterXFP(TwoButtonShutter):
+    def stop(self):
+        pass
 
-pre_shutter = TwoButtonShutter('XF:17BMA-EPS{Sh:1}', name='shutter')
+
+pre_shutter = TwoButtonShutterXFP('XF:17BMA-EPS{Sh:1}', name='shutter')
 shutter = pre_shutter
-pps_shutter = TwoButtonShutter('XF:17BM-PPS{Sh:FE}', name='pps_shutter')
+pps_shutter = TwoButtonShutterXFP('XF:17BM-PPS{Sh:FE}', name='pps_shutter')
 galvo_shutter = XFPGalvoShutter('XF:17BM-ES{Gon:1-Sht}', name='galvo_shutter')
 

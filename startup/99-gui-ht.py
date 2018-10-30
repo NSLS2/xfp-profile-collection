@@ -438,12 +438,6 @@ class XFPSampleSelector:
         self.shutters_combo.addItems(self.shutters.keys())
         controls_layout.addWidget(self.shutters_combo)
 
-        # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        # self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per slot?')
-        # self.checkbox_shutter.setChecked(True)
-        # self.checkbox_shutter.setCheckable(True)
-        # controls_layout.addWidget(self.checkbox_shutter)
-
         # Test mode:
         self.checkbox_test_mode = QtWidgets.QCheckBox('Test mode')
         self.checkbox_test_mode.setChecked(mode.test_mode)
@@ -645,25 +639,36 @@ class XFPSampleSelector:
         ct = self.shutters_combo.currentText()
         return (ct, self.shutters[ct])
 
+    def open_close_other_shutters(self, except_this_shutter, cmd):
+        """Opens/closes all shutters except the specified one from the list (does include pps_shutter)"""
+        for shutter_name, shutter_dev in self.shutters.items():
+            if shutter_dev and shutter_name != except_this_shutter:
+                yield from bps.mv(shutter_dev, cmd)
+
+    def open_close_all_shutters(self, cmd):
+        """Opens/closes all shutters from the list (does include pps_shutter)"""
+        for shutter_name, shutter_dev in self.shutters.items():
+            if shutter_dev:
+                yield from bps.mv(shutter_dev, cmd)
+
     def plan(self, file_name=None):
         self.shutters_combo.setDisabled(True)
 
         selected_shutter_name, selected_shutter = self.get_selected_shutter()
 
         def close_shutters():
-            if selected_shutter_name != 'None':
-                if selected_shutter_name == 'GalvoShutter':
-                    yield from bps.mv(self.shutters['Preshutter'], 'Close')
-                    yield from bps.mv(selected_shutter, 'Close')
-                else:
-                    yield from bps.mv(selected_shutter, 'Close')
-            else:
-                pass
+            # MR: I think it's safer to close all the shutters at the end of the scan.
+            # If BL staff is happier with controlling the shutters manually, the following
+            # line can be uncommented (and the next one commented out):
+            # yield from bps.mv(selected_shutter, 'Close')
+            yield from self.open_close_all_shutters('Close')
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
             self.shutters_combo.setDisabled(False)
 
         def main_plan(file_name):
+            yield from self.open_close_all_shutters('Close')
+
             # Reset colors to the COLOR_SELECTED before each run:
             self.reset_colors()
 
@@ -683,14 +688,6 @@ class XFPSampleSelector:
 
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Open')
-
-            if selected_shutter_name == 'None':
-                yield from bps.mv(self.shutters['Preshutter'], 'Open')
-                yield from bps.mv(self.shutters['GalvoShutter'], 'Open')
-            elif selected_shutter_name == 'GalvoShutter':
-                yield from bps.mv(self.shutters['Preshutter'], 'Open')
-            else:
-                pass
 
             for gui_d in self.walk_values():
                 d = dict(base_md)
@@ -714,15 +711,17 @@ class XFPSampleSelector:
                 self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
                 # Open it once, when the holder arrives to the first scanning point:
-                if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked():
-                    yield from bps.mv(pre_shutter, 'Open')
+                yield from self.open_close_other_shutters(selected_shutter_name, 'Open')
+                if selected_shutter:
+                    if selected_shutter.status.get() in ['Not Open', 'Closed']:
+                        yield from bps.mv(selected_shutter, 'Open')
 
                 # Check that the shutters are opened before collecting data:
                 if not mode.test_mode:
                     if pps_shutter.status.get() == 'Not Open':
                         raise Exception(f'{pps_shutter.name} must be open to finish the scan')
                     if selected_shutter:
-                        if selected_shutter.read()[f'{selected_shutter.name}_status']['value'] in ['Not Open', 'Closed']:
+                        if selected_shutter.status.get() in ['Not Open', 'Closed']:
                             raise Exception(f'{selected_shutter.name} must be open to finish the scan')
 
                 if selected_shutter:
@@ -741,15 +740,6 @@ class XFPSampleSelector:
 
                 yield from bps.checkpoint()
 
-            if selected_shutter_name != 'None':
-                if selected_shutter_name == 'GalvoShutter':
-                    yield from bps.mv(self.shutters['Preshutter'], 'Close')
-                    yield from bps.mv(selected_shutter, 'Close')
-                else:
-                    yield from bps.mv(selected_shutter, 'Close')
-
-            yield from bps.mv(pps_shutter, 'Close')
-
             if uid_list:
                 columns = ('uid', 'name', 'exposure', 'notes')
                 tbl = pd.DataFrame([[h.start[c] for c in columns]
@@ -757,6 +747,13 @@ class XFPSampleSelector:
                 self.last_table = tbl
                 if file_name is not None:
                     tbl.to_csv(file_name, index=False)
+
+            # MR: I think it's safer to close all the shutters at the end of the scan.
+            # If BL staff is happier with controlling the shutters manually, the following
+            # line can be uncommented (and the next one commented out):
+            # yield from bps.mv(selected_shutter, 'Close')
+            yield from self.open_close_all_shutters('Close')
+            yield from bps.mv(pps_shutter, 'Close')
 
         return (yield from bpp.finalize_wrapper(main_plan(file_name),
                                                 close_shutters()))
