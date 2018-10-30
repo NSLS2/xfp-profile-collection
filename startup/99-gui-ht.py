@@ -431,11 +431,12 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.re_controls.widget)
 
         # Combo box for selection of the shutters:
-        self.shutters = {'Preshutter': pre_shutter,
-                         'GalvoShutter': galvo_shutter,
-                         'None': None}
+        self.shutters = {'pre_shutter': {'ophyd_device': pre_shutter, 'display_name': 'Preshutter'},
+                         'galvo_shutter': {'ophyd_device': galvo_shutter, 'display_name': 'GalvoShutter & Preshutter'},
+                         'none': {'ophyd_device': None, 'display_name': 'No shutters'}}
+
         self.shutters_combo = QtWidgets.QComboBox()
-        self.shutters_combo.addItems(self.shutters.keys())
+        self.shutters_combo.addItems([v['display_name'] for k, v in self.shutters.items()])
         controls_layout.addWidget(self.shutters_combo)
 
         # Test mode:
@@ -611,7 +612,7 @@ class XFPSampleSelector:
 
         # Pass a flag if galvo_shutter is selected:
         selected_shutter_name, selected_shutter = self.get_selected_shutter()
-        if selected_shutter_name == 'GalvoShutter':
+        if selected_shutter_name == 'galvo_shutter':
             kwargs['use_galvo_shutter'] = True
         else:
             kwargs['use_galvo_shutter'] = False
@@ -645,19 +646,24 @@ class XFPSampleSelector:
 
     def get_selected_shutter(self):
         ct = self.shutters_combo.currentText()
-        return (ct, self.shutters[ct])
+        shutter_name = None
+        for k, v in self.shutters.items():
+            if ct in v['display_name']:
+                shutter_name = k
+                break
+        return (shutter_name, self.shutters[shutter_name]['ophyd_device'])
 
     def open_close_other_shutters(self, except_this_shutter, cmd):
         """Opens/closes all shutters except the specified one from the list (does include pps_shutter)"""
-        for shutter_name, shutter_dev in self.shutters.items():
-            if shutter_dev and shutter_name != except_this_shutter:
-                yield from bps.mv(shutter_dev, cmd)
+        for shutter_name, shutter_dict in self.shutters.items():
+            if shutter_dict['ophyd_device'] and shutter_name != except_this_shutter:
+                yield from bps.mv(shutter_dict['ophyd_device'], cmd)
 
     def open_close_all_shutters(self, cmd):
         """Opens/closes all shutters from the list (does include pps_shutter)"""
-        for shutter_name, shutter_dev in self.shutters.items():
-            if shutter_dev:
-                yield from bps.mv(shutter_dev, cmd)
+        for shutter_name, shutter_dict in self.shutters.items():
+            if shutter_dict['ophyd_device']:
+                yield from bps.mv(shutter_dict['ophyd_device'], cmd)
 
     def plan(self, file_name=None):
         self.shutters_combo.setDisabled(True)
