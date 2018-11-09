@@ -53,17 +53,15 @@ class XFPGalvoShutter(Device):
 
     def stop(self, success):
         # MR: commenting out on 10/30/2018 for manual control of the shutters (see #10).
-        '''
-        import time
-        prev_st = self._set_st
-        if prev_st is not None:
-            while not prev_st.done:
-                time.sleep(.1)
-        self._was_open = (self.open_val == self.status.get())
-        st = self.set('Close')
-        while not st.done:
-            time.sleep(.5)
-        '''
+        # import time
+        # prev_st = self._set_st
+        # if prev_st is not None:
+        #     while not prev_st.done:
+        #         time.sleep(.1)
+        # self._was_open = (self.open_val == self.status.get())
+        # st = self.set('Close')
+        # while not st.done:
+        #     time.sleep(.5)
         pass
 
     def resume(self):
