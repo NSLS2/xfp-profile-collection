@@ -2,8 +2,8 @@ from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
 
-HT_X_START = 9.2
-HT_Y_START = -91.7
+HT_X_START = 9.05
+HT_Y_START = -89.55
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
@@ -53,7 +53,8 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
         ax_ver = fig.add_subplot(122)
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
-            yield from bps.mv(pps_shutter, 'Close')
+            if not mode.test_mode:
+                yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, LOAD_POS_X, ht.y, LOAD_POS_Y)  # load position
 
         def main_plan():
