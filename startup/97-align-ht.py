@@ -3,7 +3,7 @@ from bluesky.callbacks.fitting import PeakStats
 
 
 HT_X_START = 9.05
-HT_Y_START = -89.55
+HT_Y_START = -87.60
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
@@ -148,7 +148,7 @@ def _align_ht(dir_name, mtr,
                      start, stop, num_points,
                      md=_md),
             [lp, ps])
-    print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
+    xfp_print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
 
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 

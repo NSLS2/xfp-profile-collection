@@ -642,7 +642,7 @@ class XFPSampleSelector:
                 if gui_path and reason:
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
-            print(file_name)
+            xfp_print(file_name)
 
             uid_list = []
             base_md = {'plan_name': 'ht'}
@@ -658,8 +658,8 @@ class XFPSampleSelector:
 
                 row_num, col_num = np.unravel_index(gui_d['position'], (self._rows, self._cols))
 
-                print(f"Info: {d}")
-                print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
+                xfp_print(f"Info: {d}")
+                xfp_print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
                 self.slots[gui_d['position']].change_color(COLOR_RUNNING)
 
                 yield from bps.abs_set(ht.x, self.h_pos[gui_d['position']],
@@ -689,7 +689,7 @@ class XFPSampleSelector:
 
                 self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
 
-                print(f'UID from xfp_plan_fast_shutter(): {uid}')
+                xfp_print(f'UID from xfp_plan_fast_shutter(): {uid}')
                 if uid is not None:
                     uid_list.append(uid)
 

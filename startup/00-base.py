@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from bluesky.callbacks.best_effort import BestEffortCallback
 
 
 # Disable Best Effort Callback at the moment (01/18/2018):
-nslsii.configure_base(get_ipython().user_ns, 'xfp', bec=False)
+nslsii.configure_base(get_ipython().user_ns, 'xfp', bec=False, pbar=False)
 
 # Best effort callback to print a table and show a live plot
 bec = BestEffortCallback()
@@ -22,4 +23,7 @@ _time_fmtstr = '%Y-%m-%d %H:%M:%S'
 
 # Set ipython startup dir variable (used in 97 and 99):
 PROFILE_STARTUP_PATH = Path(f"{os.environ['HOME']}/.ipython/profile_collection/startup")
+
+def xfp_print(string, stdout=sys.stdout, flush=True):
+    print(string, file=stdout, flush=flush)
 
