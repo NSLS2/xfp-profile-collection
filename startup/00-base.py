@@ -22,8 +22,7 @@ bec = BestEffortCallback()
 _time_fmtstr = '%Y-%m-%d %H:%M:%S'
 
 # Set ipython startup dir variable (used in 97 and 99):
-PROFILE_STARTUP_PATH = Path(f"{os.environ['HOME']}/.ipython/profile_collection/startup")
+PROFILE_STARTUP_PATH = Path(get_ipython().profile_dir.startup_dir)
 
 def xfp_print(string, stdout=sys.stdout, flush=True):
     print(string, file=stdout, flush=flush)
-
