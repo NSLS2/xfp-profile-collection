@@ -695,12 +695,6 @@ class XFPSampleSelector:
 
                 yield from bps.checkpoint()
 
-            # Close it once the walkthrough is done:
-            if not self.checkbox_shutter.isChecked():
-                yield from bps.mv(shutter, 'Close')
-
-            yield from bps.mv(pps_shutter, 'Close')
-
             if uid_list:
                 columns = ('uid', 'name', 'exposure', 'notes')
                 tbl = pd.DataFrame([[h.start[c] for c in columns]
@@ -708,6 +702,16 @@ class XFPSampleSelector:
                 self.last_table = tbl
                 if file_name is not None:
                     tbl.to_csv(file_name, index=False)
+
+            # Close it once the walkthrough is done:
+            if not self.checkbox_shutter.isChecked():
+                yield from bps.mv(shutter, 'Close')
+
+            from bluesky.utils import FailedStatus
+            try:
+                yield from bps.mv(pps_shutter, 'Close')
+            except FailedStatus:
+                yield from bps.mv(pps_shutter, 'Close')
 
         return (yield from bpp.finalize_wrapper(main_plan(file_name),
                                                 close_shutters()))
