@@ -3,10 +3,10 @@ from ophyd import (Component as Cpt)
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
-# Filter wheel ophyd object
-
 
 class PseudoFilterWheel(PseudoPositioner):
+    """Filter wheel pseudopositioner ophyd object."""
+
     # dict consists of the following fields:
     # position number: angle [degrees], thickness of material [um]
     wheel_positions = {1: {'angle': 0, 'thickness': 0},
@@ -27,15 +27,6 @@ class PseudoFilterWheel(PseudoPositioner):
     # Real positioner: angle
     angle = Cpt(EpicsMotor, 'XF:17BMA-ES:1{Fltr:1-Ax:Rot}Mtr')
 
-#     def __init__(self, *args, **kwargs):
-#         self.is_moving = None
-#         super().__init__(*args, **kwargs)
-
-#     def set(self, *args, **kwargs):
-#         self.is_moving = True
-#         st = super().set(*args, **kwargs)
-#         return st
-
     @pseudo_position_argument
     def forward(self, pseudo_pos, tol=1e-2):
         '''Run a forward (pseudo -> real) calculation'''
@@ -52,7 +43,7 @@ class PseudoFilterWheel(PseudoPositioner):
                              f'Available thickness values are: {self._thicknesses}')
         elif self.angle._moving:
             # TODO: do it a better/smart way
-            return [0]
+            return self.RealPosition(angle=-1)
         else:
             return self.RealPosition(angle=angle_val)
 
@@ -72,7 +63,7 @@ class PseudoFilterWheel(PseudoPositioner):
                              f'Available angle values are: {self._angles}')
         elif self.angle._moving:
             # TODO: do it a better/smart way
-            return [0]
+            return self.PseudoPosition(thickness=-1)
         else:
             return self.PseudoPosition(thickness=thickness_val)
 
