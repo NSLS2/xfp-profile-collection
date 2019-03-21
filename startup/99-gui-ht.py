@@ -4,6 +4,7 @@ install_qt_kicker()
 from itertools import cycle
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 from locate_slot import LetterNumberLocator
+import copy
 
 
 COLOR_SUCCESS = 'green'
@@ -12,8 +13,19 @@ COLOR_SELECTED = '#007dff'  # blue
 COLOR_SKIPPED = 'gray'
 
 
+def get_position_from_index(positions, field, idx):
+    return positions[idx][field]
+
+
+def get_index_from_position(positions, field, current_pos, tolerance=1e-8):
+    for idx, pos in enumerate(positions):
+        if abs(pos[field] - current_pos) < tolerance:
+            return idx
+    return None
+
+
 class ColumnWidget:
-    def __init__(self, j, data=None):
+    def __init__(self, j, *, filter_obj=None, data=None):
         self._position = j
         self.data = data
 
@@ -26,6 +38,18 @@ class ColumnWidget:
         self.sb.setMaximum(20000)
 
         self.le = QtWidgets.QLineEdit(f'sample {j}')
+
+        # Combo box for selection of the filter thickness:
+        if filter_obj is None:
+            raise ValueError(f'The filter object should be specified. Passed None')
+        self.filter_obj = filter_obj
+        self.wheel_positions = copy.deepcopy(self.filter_obj.wheel_positions)
+        for i, pos in enumerate(self.wheel_positions):
+            self.wheel_positions[i]['text'] = (f'Angle: {pos["angle"]} [{pos["angle_egu"]}] '
+                                               f'Thickness: {pos["thickness"]} [{pos["thickness_egu"]}]')
+
+        self.filter_combo = QtWidgets.QComboBox()
+        self.filter_combo.addItems([x['text'] for x in self.wheel_positions])
 
         self.notes = QtWidgets.QTextEdit(f'{j}')
 
@@ -77,6 +101,7 @@ class ColumnWidget:
 
         self.popup_layout.addRow('Name', self.le)
         self.popup_layout.addRow('Exposure [ms]', self.sb)
+        self.popup_layout.addRow('Filter', self.filter_combo)
         self.popup_layout.addRow('Notes', self.notes)
 
         # Update tooltip values:
@@ -84,6 +109,7 @@ class ColumnWidget:
         self.sb.valueChanged.connect(self.check_zero)
         self.le.textChanged.connect(self.tooltip_update)
         self.notes.textChanged.connect(self.tooltip_update)
+        self.filter_combo.currentIndexChanged.connect(self.tooltip_update)
 
     def update_slot(self):
         if self.data is not None:
@@ -92,6 +118,7 @@ class ColumnWidget:
             self.le.setText(str(self.data['name']))
             self.notes.setText(str(self.data['notes']))
             self.sb.setValue(float(self.data['exposure']))
+            self.filter_combo.setCurrentIndex(self.data['filter'])
         self.tooltip_update()
 
     def input_dialog(self):
@@ -121,6 +148,9 @@ class ColumnWidget:
     </tr>
     <tr>
         <td>Exposure:</td><td><b>{self.sb.value()}</b></td>
+    </tr>
+    <tr>
+        <td>Filter:</td><td><b>{self.filter_combo.currentText()}</b></td>
     </tr>
     <tr>
         <td>Notes:</td><td><i>{self.notes.toPlainText()}<i></td>
@@ -172,8 +202,13 @@ class ColumnWidget:
 
     @property
     def exposure(self):
-        self._exposure = self.sb.value()
-        return self._exposure
+        return self.sb.value()
+
+    @property
+    def filter(self):
+        idx = self.filter_combo.currentIndex()
+        txt = self.wheel_positions[idx]['text']
+        return {'index': idx, 'text': txt}
 
 
 class DirectorySelector:
@@ -381,7 +416,10 @@ class RunEngineControls:
 
 
 class XFPSampleSelector:
-    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=LOAD_POS_X, load_pos_y=LOAD_POS_Y):
+    def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=LOAD_POS_X, load_pos_y=LOAD_POS_Y, filter_obj=None):
+
+        self.filter_obj = filter_obj
+
         self.window = window = QtWidgets.QMainWindow()
         window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
 
@@ -402,6 +440,10 @@ class XFPSampleSelector:
 
         self.letter_number = LetterNumberLocator(num_cols=cols, num_rows=rows)
 
+        field = 'thickness'
+        current_thickness = getattr(self.filter_obj, field).read()[f'{getattr(self.filter_obj, field).name}']['value']
+        current_index = get_index_from_position(self.filter_obj.wheel_positions, field, current_thickness, self.filter_obj._tolerance)
+
         self.slots = []
         for j in range(rows*cols):
             r, c = np.unravel_index(j, (rows, cols))
@@ -410,9 +452,10 @@ class XFPSampleSelector:
                 'slot': j,
                 'name': '',
                 'notes': '',
-                'exposure': 0
+                'exposure': 0,
+                'filter': current_index,
             }
-            cw = ColumnWidget(j, data=data)
+            cw = ColumnWidget(j, data=data, filter_obj=self.filter_obj)
             slots_layout.addWidget(cw.cb, r, c)
             self.slots.append(cw)
 
@@ -576,6 +619,8 @@ class XFPSampleSelector:
             if d.enabled:
                 return_list.append({'exposure': d.exposure,
                                     'position': d.position,
+                                    'filter_index': d.filter['index'],
+                                    'filter_text': d.filter['text'],
                                     **d.md})
         return return_list
 
@@ -611,11 +656,12 @@ class XFPSampleSelector:
                               HT_COORDS['y'][self._slot_index[1]])
 
     def set_test(self):
-        for i in [(0, 10), (2, 20), (29, 30)]:
+        for i in [(0, 10, 0), (2, 20, 1), (29, 30, 2)]:
             column = self.slots[i[0]]
             column.cb.setChecked(True)
             column.indicator.setEnabled(True)
             column.sb.setValue(i[1])
+            column.filter_combo.setCurrentIndex(i[2])
 
     def update_locations(self, slot_align_x, slot_align_y):
         d = default_coords(x_start=slot_align_x, y_start=slot_align_y,
@@ -642,7 +688,7 @@ class XFPSampleSelector:
                 if gui_path and reason:
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
-            xfp_print(file_name)
+            xfp_print(f'CSV file name: {file_name}')
 
             uid_list = []
             base_md = {'plan_name': 'ht'}
@@ -696,7 +742,7 @@ class XFPSampleSelector:
                 yield from bps.checkpoint()
 
             if uid_list:
-                columns = ('uid', 'name', 'exposure', 'notes')
+                columns = ('uid', 'name', 'exposure', 'filter_text', 'notes')
                 tbl = pd.DataFrame([[h.start[c] for c in columns]
                                     for h in db[uid_list]], columns=columns)
                 self.last_table = tbl
@@ -727,6 +773,12 @@ def motors_positions(motors):
 
 
 def xfp_plan_fast_shutter(d, shutter_per_slot):
+    current_field = 'thickness'
+    move_to_thickness = float(get_position_from_index(filter_wheel.wheel_positions,
+                                                      current_field,
+                                                      d['filter_index']))
+    yield from bps.mv(getattr(filter_wheel, current_field), move_to_thickness)
+
     exp_time = d['exposure']/1000
     yield from bps.mv(dg, exp_time)
 
@@ -755,5 +807,4 @@ except:
 x_pos = HT_COORDS['x']
 y_pos = HT_COORDS['y']
 
-HTgui = XFPSampleSelector(x_pos, y_pos)
-
+HTgui = XFPSampleSelector(x_pos, y_pos, filter_obj=filter_wheel)
