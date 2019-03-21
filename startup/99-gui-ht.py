@@ -275,10 +275,11 @@ class FileSelector:
     '''
     A widget class to deal with selecting and displaying files
     '''
-    def __init__(self, caption, path='', ext_widget=None):
+    def __init__(self, caption, path='', ext_widget=None, filter_obj=None):
         self.file_name = None
         self.ext_widget = ext_widget
         self.excel_data = None
+        self.filter_obj = filter_obj
 
         self.cap = caption
         widget = self.widget = QtWidgets.QGroupBox(caption)
@@ -316,14 +317,18 @@ class FileSelector:
                                                'Location': str,
                                                'Sample name': str,
                                                'Exposure time (ms)': float,
+                                               'Filter Thickness (um)': float,
                                                'Notes': str},
                                         keep_default_na=False)
         self.excel_data.columns = ['slot',
                                    'location',
                                    'name',
                                    'exposure',
+                                   'filter',
                                    'notes']
         for j in range(NUM_ROWS*NUM_COLS):
+            thickness = self.excel_data['filter'][j]
+            self.excel_data.at[j, 'filter'] = get_index_from_position(self.filter_obj.wheel_positions, 'thickness', thickness)
             self.ext_widget.slots[j].data = self.excel_data.iloc[j, :]
             self.ext_widget.slots[j].update_slot()
 
@@ -465,7 +470,7 @@ class XFPSampleSelector:
         self.controls_layout = controls_layout = QtWidgets.QVBoxLayout()
 
         # Import Excel file controls:
-        self.import_file = import_file = FileSelector('Import Excel file', ext_widget=self)
+        self.import_file = import_file = FileSelector('Import Excel file', ext_widget=self, filter_obj=self.filter_obj)
         self.path_select = path = DirectorySelector('Export CSV file after run')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
