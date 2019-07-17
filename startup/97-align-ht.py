@@ -2,8 +2,8 @@ from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
 
-HT_X_START = 9.05
-HT_Y_START = -87.60
+HT_X_START = 8.64
+HT_Y_START = -85.96
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
