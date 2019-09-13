@@ -118,7 +118,8 @@ class ColumnWidget:
             self.le.setText(str(self.data['name']))
             self.notes.setText(str(self.data['notes']))
             self.sb.setValue(float(self.data['exposure']))
-            self.filter_combo.setCurrentIndex(self.data['filter'])
+            if self.data['filter'] is not None:
+                self.filter_combo.setCurrentIndex(self.data['filter'])
         self.tooltip_update()
 
     def input_dialog(self):
