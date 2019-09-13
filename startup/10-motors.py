@@ -312,7 +312,10 @@ quad = QuadEM('XF:17BM-BI{EM:1}', name='quad',
 
 pin_diode = QuadEM('XF:17BM-BI{EM:1}', name='pin_diode')
 
-diode = QuadEM('XF:17BM-BI{EM:BPM1}Current4:MeanValue_RBV', name = 'diode')
+# MR20190913: this 'diode' object below is misconfigured and causes a malformed
+# PV names for QuadEM devices in 15-electrometer.py.
+# See https://github.com/NSLS-II-XFP/profile_collection/pull/15 for details.
+# diode = QuadEM('XF:17BM-BI{EM:BPM1}Current4:MeanValue_RBV', name = 'diode')
 
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')

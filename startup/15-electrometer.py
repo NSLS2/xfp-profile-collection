@@ -57,4 +57,3 @@ qem1 = XFPQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
 # qem2 = XFPQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
 for det in [qem1]:
     det.read_attrs = ['current3', 'current3.mean_value']
-_
