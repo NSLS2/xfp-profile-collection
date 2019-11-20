@@ -4,23 +4,14 @@ from ophyd import (EpicsMotor, Device,
                    Component as Cpt, EpicsSignal,
                    EpicsSignalRO, DeviceStatus)
 
-class Slits(Device):
-    top = Cpt(EpicsMotor, 'T}Mtr')
-    bottom = Cpt(EpicsMotor, 'B}Mtr')
-    inboard = Cpt(EpicsMotor, 'I}Mtr')
-    outboard = Cpt(EpicsMotor, 'O}Mtr')
+#class InBottomSlits(Device):
+#    bottom = Cpt(EpicsMotor, 'B}Mtr')
+#    inboard = Cpt(EpicsMotor, 'I}Mtr')
 
 
-class InBottomSlits(Device):
-    bottom = Cpt(EpicsMotor, 'B}Mtr')
-    inboard = Cpt(EpicsMotor, 'I}Mtr')
-
-
-class TopOutSlits(Device):
-    top = Cpt(EpicsMotor, 'T}Mtr')
-    outboard = Cpt(EpicsMotor, 'O}Mtr')
-
-
+#class TopOutSlits(Device):
+#    top = Cpt(EpicsMotor, 'T}Mtr')
+#    outboard = Cpt(EpicsMotor, 'O}Mtr')
 
 class SamplePump(Device):
     vel = Cpt(EpicsSignal, 'Val:Vel-SP')
@@ -286,9 +277,10 @@ class DelayGenerator(Device):
 
 dg = DelayGenerator('XF:17BMA-ES:2{DG:1}', name = 'dg')
 
-msh = EpicsMotor('XF:17BMA-ES:2{Stg:4-Ax:X}Mtr', name='msh')
-tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='tbl2')
-mshlift = EpicsMotor('XF:17BMA-ES:2{Stg:6-Ax:Y}Mtr', name='mshlift')
+#Original MSH device motors, removed from IOC Jan 2019
+#msh = EpicsMotor('XF:17BMA-ES:2{Stg:4-Ax:X}Mtr', name='msh')
+#tbl2 = EpicsMotor('XF:17BMA-ES:2{Tbl:2-Ax:Y}Mtr', name='tbl2')
+#mshlift = EpicsMotor('XF:17BMA-ES:2{Stg:6-Ax:Y}Mtr', name='mshlift')
 
 class SR630(Device):
 #Note: Channels start at 0 (i.e. setting channel to 0 is actually choosing Ch1)
@@ -324,12 +316,12 @@ class ModXY_CF(Device):
 cf = ModXY_CF('XF:17BMA-ES:1{Stg:5-Ax:', name='cf')
 modx = EpicsMotor('XF:17BMA-ES:1{Stg:5-Ax:X}Mtr', name = 'modx')
 
+#Original ModXY, removed from IOC Jan 2019
+#class ModXY_Stg3(Device):
+#    x = Cpt(EpicsMotor, 'X}Mtr')
+#    y = Cpt(EpicsMotor, 'Y}Mtr')
 
-class ModXY_Stg3(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr')
-    y = Cpt(EpicsMotor, 'Y}Mtr')
-
-modxy = ModXY_Stg3('XF:17BMA-ES:1{Stg:3-Ax:', name='modxy')
+#modxy = ModXY_Stg3('XF:17BMA-ES:1{Stg:3-Ax:', name='modxy')
 
 class BeamPipeStage(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
@@ -337,11 +329,12 @@ class BeamPipeStage(Device):
 
 pipe = BeamPipeStage('XF:17BMA-OP{Stg:2-Ax:', name='pipe')
 
-class XZStage(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr')
-    z = Cpt(EpicsMotor, 'Z}Mtr')
+#Original commissioning stage, removed from IOC Jan 2019
+#class XZStage(Device):
+#    x = Cpt(EpicsMotor, 'X}Mtr')
+#    z = Cpt(EpicsMotor, 'Z}Mtr')
 
-xz = XZStage('XF:17BMA-ES:1{Stg:1-Ax:', name='xz')
+#xz = XZStage('XF:17BMA-ES:1{Stg:1-Ax:', name='xz')
 
 class Table1(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
@@ -362,7 +355,31 @@ class BPM(Device):
 
 bpm1 = BPM('XF:17BMA-OP{Bpm:1-Ax:', name='bpm1')
 
-#pbslits = Slits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
+#Amazon 50mm-100mm slides
+class CVDViewer(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+cvd = CVDViewer('XF:17BMA-ES:1{CVD:1-Ax:', name='cvd')
+
+class CFSample(Device):
+    z = Cpt(EpicsMotor, 'Z}Mtr')
+
+cfsam = CFSample('XF:17BMA-ES:1{Sam:1-Ax:', name='cfsam')
+
+#Real and virtual XFP PB Slit axes in a single class.
+class PBSlits(Device):
+    top = Cpt(EpicsMotor, 'T}Mtr')
+    bot = Cpt(EpicsMotor, 'B}Mtr')
+    inb = Cpt(EpicsMotor, 'I}Mtr')
+    outb = Cpt(EpicsMotor, 'O}Mtr')
+    xgap = Cpt(EpicsMotor, 'XGap}Mtr')
+    xctr = Cpt(EpicsMotor, 'XCtr}Mtr')
+    ygap = Cpt(EpicsMotor, 'YGap}Mtr')
+    yctr = Cpt(EpicsMotor, 'YCtr}Mtr')
+
+pbslits = PBSlits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
+
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
 #feslits2 = InBottomSlits('FE:C17B-OP{Slt:2-Ax:', name='feslits2')
 
