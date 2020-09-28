@@ -55,5 +55,13 @@ class XFPQuadEM(QuadEM):
 qem1 = XFPQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
 #TODO: add later when it's repared
 # qem2 = XFPQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
+#TODO: read in current1, 2, 4 for qem1
 for det in [qem1]:
     det.read_attrs = ['current3', 'current3.mean_value']
+
+#Read-in Experiments NSLS2_EM channels
+#TODO: improve readback to match qem1
+qem2_ch1 = EpicsSignalRO('XF:17BM-BI{EM:2}Current1:MeanValue_RBV', name='qem2_ch1')
+qem2_ch2 = EpicsSignalRO('XF:17BM-BI{EM:2}Current2:MeanValue_RBV', name='qem2_ch2')
+qem2_ch3 = EpicsSignalRO('XF:17BM-BI{EM:2}Current3:MeanValue_RBV', name='qem2_ch3')
+qem3_ch4 = EpicsSignalRO('XF:17BM-BI{EM:2}Current4:MeanValue_RBV', name='qem2_ch4')
