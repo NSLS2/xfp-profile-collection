@@ -2,11 +2,11 @@ from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
 
-HT_X_START = -4.10
-HT_Y_START = -74.26
+HT_X_START = 2.75
+HT_Y_START = -76.50
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
-LOAD_POS_X = -70
+LOAD_POS_X = -90
 LOAD_POS_Y = -50
 
 #TODO: add qem2 once it's repared
