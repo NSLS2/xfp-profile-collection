@@ -381,6 +381,19 @@ class PBSlits(Device):
 
 pbslits = PBSlits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 
+#Real and virtual XFP ADC Slit axes in a single class.
+class ADCSlits(Device):
+    top = Cpt(EpicsMotor, 'T}Mtr')
+    bot = Cpt(EpicsMotor, 'B}Mtr')
+    inb = Cpt(EpicsMotor, 'I}Mtr')
+    outb = Cpt(EpicsMotor, 'O}Mtr')
+    xgap = Cpt(EpicsMotor, 'XGap}Mtr')
+    xctr = Cpt(EpicsMotor, 'XCtr}Mtr')
+    ygap = Cpt(EpicsMotor, 'YGap}Mtr')
+    yctr = Cpt(EpicsMotor, 'YCtr}Mtr')
+
+adcslits = ADCSlits('XF:17BMA-OP{Slt:ADC-Ax:', name='adcslits')
+
 #feslits1 = TopOutSlits('FE:C17B-OP{Slt:1-Ax:', name='feslits1')
 #feslits2 = InBottomSlits('FE:C17B-OP{Slt:2-Ax:', name='feslits2')
 
