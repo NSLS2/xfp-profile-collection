@@ -1,12 +1,10 @@
-#from bluesky.suspenders import SuspendBoolLow
+from bluesky.suspenders import (SuspendBoolLow, SuspendFloor)
 
 #Borrow ring current suspender code from LiX with some modifications
-from ophyd import EpicsSignal
-from bluesky.suspenders import (SuspendFloor, SuspendCeil)
 
 beam_recovery_time = 600  #time in seconds, 10 minute recovery
 beam_threshold = 300
-beam_ring_current = EpicsSignal('SR:OPS-BI{DCCT:1}I:Real-I')
+beam_ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I')
 
 beam_current_suspender = SuspendFloor(beam_ring_current, beam_threshold, sleep=beam_recovery_time)
 
