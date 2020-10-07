@@ -369,7 +369,7 @@ class RunEngineControls:
         self.handle_state_change(self.RE.state, None)
 
     def run(self):
-        if EpicsSignalRO(pps_shutter.enabled_status.pvname).value == 0 and not mode.test_mode:
+        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0 and not mode.test_mode:
             self.label.setText('Shutter\nnot\nenabled')
             self.label.setStyleSheet(f'QLabel {{background-color: red; color: white}}')
         else:
