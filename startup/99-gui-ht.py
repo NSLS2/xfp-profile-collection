@@ -1,6 +1,7 @@
-plt.ion()
-from bluesky.utils import install_qt_kicker
-install_qt_kicker()
+import warnings
+# plt.ion()
+# from bluesky.utils import install_qt_kicker
+# install_qt_kicker()
 from itertools import cycle
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 from locate_slot import LetterNumberLocator
@@ -386,26 +387,31 @@ class RunEngineControls:
 
     def handle_state_change(self, new, old):
         if new == 'idle':
-            state = 'Idle'
             color = 'green'
             button_run_enabled = True
             button_pause_enabled = False
             button_run_text = 'Run'
             button_pause_text = 'Pause'
         elif new == 'paused':
-            state = 'Paused'
             color = 'blue'
             button_run_enabled = True
             button_pause_enabled = True
             button_run_text = 'Resume'
             button_pause_text = 'Stop'
         elif new == 'running':
-            state = 'Running'
             color = 'red'
             button_run_enabled = False
             button_pause_enabled = True
             button_run_text = 'Run'
             button_pause_text = 'Pause'
+        else:
+            color = 'darkGray'
+            button_run_enabled = False
+            button_pause_enabled = False
+            button_run_text = 'Run'
+            button_pause_text = 'Stop'
+
+        state = str(new).capitalize()
 
         width = 60
         height = 60
@@ -650,12 +656,23 @@ class XFPSampleSelector:
         mode.test_mode = state
 
     def align_ht(self):
-        kwargs = {'det': ALIGN_DETS[self.dets_combo.currentText()]}
+        det = ALIGN_DETS[self.dets_combo.currentText()]
+        kwargs = {'det': det}
         if self._manual_align_is_checked():
             kwargs['x_start'] = self.aligning_x.value()
             kwargs['y_start'] = self.aligning_y.value()
             kwargs['run'] = False
         self.dets_combo.setEnabled(False)
+
+        # We need to create a figure _before_ submitting a plan.
+        fig = plt.figure('Align with <{}> motor and <{}> detector'.format(ht.name, det.name),
+                         figsize=(16, 5))
+        ax_hor = fig.add_subplot(121)
+        ax_ver = fig.add_subplot(122)
+        kwargs['fig'] = fig
+        kwargs['ax_hor'] = ax_hor
+        kwargs['ax_ver'] = ax_ver
+
         RE(align_ht(**kwargs))
         self.dets_combo.setEnabled(True)
         self.update_locations(HT_COORDS['x'][self._slot_index[0]],

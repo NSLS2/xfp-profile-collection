@@ -33,13 +33,21 @@ mode = TestMode(test_mode=False)
 
 
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
-             det=tcm1):
+             det=tcm1, fig=None, ax_hor=None, ax_ver=None):
     """Align high-throughput sample holder.
 
         x_start : horizontal start position
         y_start : vertical start position
         md : optional metadata information
     """
+
+    if fig is None:
+        raise RuntimeError('Figure is not defined')
+    if ax_hor is None:
+        raise RuntimeError('Horizontal axis is not defined')
+    if ax_ver is None:
+        raise RuntimeError('Vertical axis is not defined')
+
     assert det in ALIGN_DETS.values(), \
         f'The detector for alignment should be one of {list(ALIGN_DETS.keys())}'
 
@@ -47,10 +55,6 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     _x_start = None
     _y_start = None
     if run:
-        fig = plt.figure('Align with <{}> motor and <{}> detector'.format(ht.name, det.name),
-                         figsize=(16, 5))
-        ax_hor = fig.add_subplot(121)
-        ax_ver = fig.add_subplot(122)
         def close_shutters():
             yield from bps.mv(shutter, 'Close')
             if not mode.test_mode:
@@ -96,7 +100,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     HT_COORDS.to_csv(HT_COORDS_FILE, float_format='%.2f')
 
 
-def default_coords(x_start=HT_X_START, y_start=HT_Y_START, 
+def default_coords(x_start=HT_X_START, y_start=HT_Y_START,
                    x_init_slot=2, y_init_slot=0,
                    n_cols=8, n_rows=12,
                    x_spacing=9.0, y_spacing=9.0):

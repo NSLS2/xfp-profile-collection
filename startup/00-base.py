@@ -1,3 +1,13 @@
+################################################################
+# TODO: remove it after bluesky<1.6 is not used/needed here.
+import bluesky
+from distutils.version import LooseVersion
+if bluesky.__version__ < LooseVersion('1.6'):
+    OLD_BLUESKY = True
+else:
+    OLD_BLUESKY = False
+################################################################
+
 import os
 import sys
 from pathlib import Path
@@ -118,3 +128,16 @@ runengine_metadata_dir = appdirs.user_data_dir(appname="bluesky") / Path("runeng
 # PersistentDict will create the directory if it does not exist
 RE.md = PersistentDict(runengine_metadata_dir)
 
+# TODO: remove the first condition along with the part on the top of the file.
+################################################################
+if OLD_BLUESKY:
+    from bluesky.utils import install_qt_kicker
+    install_qt_kicker()
+else:
+################################################################
+    import matplotlib.backends.backend_qt5
+    from matplotlib._pylab_helpers import Gcf
+    from matplotlib.backends.backend_qt5 import _create_qApp
+
+    _create_qApp()
+    qApp = matplotlib.backends.backend_qt5.qApp
