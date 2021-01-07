@@ -94,7 +94,7 @@ pps_shutter = TwoButtonShutter('XF:17BM-PPS{Sh:FE}', name='pps_shutter')
 
 
 class DiodeShutter(Device):
-    open_close_cmd = Cpt(EpicsSignal, '1}OutPt00:Data-Cmd')
+    open_close_cmd = Cpt(EpicsSignal, '1}OutPt00:Data-Sel')
     status_open = Cpt(EpicsSignalRO, '2}InPt00:Data-Sts')
     status_closed = Cpt(EpicsSignalRO, '2}InPt01:Data-Sts')
 
