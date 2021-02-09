@@ -39,6 +39,13 @@ class HT(Device):
 
 ht = HT('XF:17BMA-ES:2{Stg:7-Ax:', name='ht')
 
+#HTFly XY stages (shutterless HT)
+class HTFly(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
+
+htfly = HT('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
+
 #Sydor BPM motors and readback in 20-bpm.py
 #class BPM(Device):
 #    x = Cpt(EpicsMotor, 'X}Mtr')
