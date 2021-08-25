@@ -3,11 +3,7 @@ from ophyd.areadetector import ADBase, ADComponent as ADCpt
 from ophyd.quadem import QuadEM
 from ophyd import DynamicDeviceComponent as DDCpt
 from collections import OrderedDict
-from nslsii.ad33 import QuadEMV33, StatsPluginV33
-
-
-# class XFPStatsPluginV33(StatsPluginV33):
-#     time_series = ADCpt(EpicsSignalRO, "TimeSeries")
+from nslsii.ad33 import QuadEMV33
 
 
 class QuadEMPort(ADBase):
@@ -97,6 +93,6 @@ def qem_ts_plan(det=qem1, num=5, delay=1.0, wait_before_collect=0.5):
     yield from bps.sleep(wait_before_collect)
     for i in range(num):
         yield from bps.trigger_and_read([det.ts])
-        if i +1 < num:
+        if i + 1 < num:
             yield from bps.sleep(delay)
     yield from bps.mv(det.ts.acquire, 0)
