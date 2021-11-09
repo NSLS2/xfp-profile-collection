@@ -1,4 +1,4 @@
-#Capillary destructive testing
+#Capillary destructive testing (pre-shutter only)
 
 import datetime
 
@@ -35,4 +35,25 @@ def timed_shutter(exp_time, *, md=None):
 
 
     yield from bpp.finalize_wrapper(inner_plan(), clean_up())
+
+#Functions to actuate Uniblitz fast shutter
+
+def timed_uniblitz(fire_time):
+    yield from bps.mv(dg, fire_time)      #set Uniblitz opening time
+    yield from bps.mv(dg.fire, 1)         #fire Uniblitz
+    yield from bps.sleep(fire_time*1.1)   #wait for shutter to finish
+    fire_time_str = str(fire_time)
+    print("Fired Uniblitz shutter for " + fire_time_str + "seconds")
+
+def timed_uniblitz_pre(fire_time):
+    yield from bps.mv(shutter, 'Open')    #open pre-shutter
+    print("Opened pre-shutter")
+    yield from bps.mv(dg, fire_time)      #set Uniblitz opening time
+    yield from bps.mv(dg.fire, 1)         #fire Uniblitz
+    yield from bps.sleep(fire_time*1.2)   #wait for shutter to finish
+    fire_time_str = str(fire_time)
+    print("Fired Uniblitz shutter for " + fire_time_str + "seconds")
+    yield from bps.mv(shutter, 'Close')   #close pre-shutter
+    print("Closed pre-shutter")
+
 
