@@ -696,6 +696,7 @@ class XFPSampleSelector:
     def plan(self, file_name=None):
 
         def close_shutters():
+            yield from bps.mv(qem1.ts.acquire, 0)  # TODO: parametrize the detector object
             yield from bps.mv(pre_shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
@@ -720,6 +721,8 @@ class XFPSampleSelector:
 
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Open')
+
+            yield from bps.mv(qem1.ts.acquire, 1)  # TODO: use the parametrized detector object
 
             for gui_d in self.walk_values():
                 d = dict(base_md)
@@ -815,7 +818,7 @@ def xfp_plan_fast_shutter(d, shutter_per_slot):
     if shutter_per_slot:
         yield from bps.mv(pre_shutter, 'Close')
 
-    return (yield from bp.count([ht.x, ht.y], md=d))
+    return (yield from bp.count([qem1.ts, ht.x, ht.y], md=d))  # TODO: parametrize the detector object
 
 try:
     HTgui.close()
