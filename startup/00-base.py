@@ -140,4 +140,3 @@ else:
     from matplotlib.backends.backend_qt5 import _create_qApp
 
     _create_qApp()
-    qApp = matplotlib.backends.backend_qt5.qApp
