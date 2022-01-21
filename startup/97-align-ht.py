@@ -1,3 +1,6 @@
+import pprint
+from numpy import array
+
 from bluesky.callbacks.mpl_plotting import plot_peak_stats
 from bluesky.callbacks.fitting import PeakStats
 
@@ -152,7 +155,13 @@ def _align_ht(dir_name, mtr,
                      start, stop, num_points,
                      md=_md),
             [lp, ps])
-    xfp_print({k: v for k, v in ps.__dict__.items() if not k.startswith('_')})
+
+    ps_dict = {}
+    for k in dir(ps["stats"]):
+        if not k.startswith('_') and k not in ["count", "index"]:
+            ps_dict[k] = getattr(ps["stats"], k)
+
+    xfp_print(pprint.pformat(ps_dict))
 
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
 
