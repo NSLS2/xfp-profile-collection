@@ -1,4 +1,9 @@
-#Define a class for SydorBPM Channel names specific to this device from NSLS2_EM
+'''Purpose: define ophyd objects for:
+1. Sydor BPM electrometer readout (via modified NSLS2_EM)
+2. EpicsMotor motions for bpm alignment
+3. Sydor PBG bias control and thermocouple readout
+'''
+
 class SydorBPM(Device):
     chan_a = Cpt(EpicsSignalRO, 'Current1:MeanValue_RBV')
     chan_b = Cpt(EpicsSignalRO, 'Current2:MeanValue_RBV')
@@ -10,12 +15,6 @@ class SydorBPM(Device):
 
 sydor_bpm = SydorBPM('XF:17BM-BI{EM:BPM1}', name='sydor_bpm')
 
-#sydor_cha = EpicsSignalRO('XF:17BM-BI{EM:BPM1}Current1:MeanValue_RBV', name='sydor_cha')
-#sydor_chb = EpicsSignalRO('XF:17BM-BI{EM:BPM1}Current2:MeanValue_RBV', name='sydor_chb')
-#sydor_chc = EpicsSignalRO('XF:17BM-BI{EM:BPM1}Current3:MeanValue_RBV', name='sydor_chc')
-#sydor_chd = EpicsSignalRO('XF:17BM-BI{EM:BPM1}Current4:MeanValue_RBV', name='sydor_chd')
-
-#def motor motions as a class
 class BPM(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
     y = Cpt(EpicsMotor, 'Y}Mtr')
@@ -32,4 +31,3 @@ class SydorPBG(Device):
     polarity = Cpt(EpicsSignal, 'Polarity', kind='config')
 
 sydor_pbg = SydorPBG('XF:17BM-ES{PBG:1}', name='sydor_pbg')
-

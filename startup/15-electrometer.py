@@ -81,10 +81,13 @@ for det in [qem1]:
 
 #Read-in Experiments NSLS2_EM channels
 #TODO: improve readback to match qem1
-qem2_ch1 = EpicsSignalRO('XF:17BM-BI{EM:2}Current1:MeanValue_RBV', name='qem2_ch1')
-qem2_ch2 = EpicsSignalRO('XF:17BM-BI{EM:2}Current2:MeanValue_RBV', name='qem2_ch2')
-qem2_ch3 = EpicsSignalRO('XF:17BM-BI{EM:2}Current3:MeanValue_RBV', name='qem2_ch3')
-qem3_ch4 = EpicsSignalRO('XF:17BM-BI{EM:2}Current4:MeanValue_RBV', name='qem2_ch4')
+class XFP_qem2(Device):
+    ch1 = Cpt(EpicsSignalRO, 'Current1:MeanValue_RBV', kind='normal')
+    ch2 = Cpt(EpicsSignalRO, 'Current2:MeanValue_RBV', kind='normal')
+    ch3 = Cpt(EpicsSignalRO, 'Current3:MeanValue_RBV', kind='normal')
+    ch4 = Cpt(EpicsSignalRO, 'Current4:MeanValue_RBV', kind='normal')
+
+xfp_qem2 = XFP_qem2('XF:17BM-BI{EM:2}', name='xfp_qem2')
 
 
 @bpp.run_decorator()
