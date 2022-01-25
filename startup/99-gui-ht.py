@@ -2,8 +2,8 @@ import warnings
 # plt.ion()
 # from bluesky.utils import install_qt_kicker
 # install_qt_kicker()
-from itertools import cycle
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+import matplotlib.pyplot as plt
 from locate_slot import LetterNumberLocator
 import copy
 
@@ -665,10 +665,17 @@ class XFPSampleSelector:
         self.dets_combo.setEnabled(False)
 
         # We need to create a figure _before_ submitting a plan.
-        fig = plt.figure('Align with <{}> motor and <{}> detector'.format(ht.name, det.name),
-                         figsize=(16, 5))
-        ax_hor = fig.add_subplot(121)
-        ax_ver = fig.add_subplot(122)
+        fig = plt.figure(
+            f'Align with <{ht.name}> motor and <{det.name}> detector',
+            figsize=(16, 5)
+        )
+        axes_d = {ax.get_label(): ax for ax in fig.axes}
+        if 'horizontal' not in axes_d:
+            ax_hor = fig.add_subplot(121, label='horizontal')
+            ax_ver = fig.add_subplot(122, label='vertical')
+        else:
+            ax_hor = axes_d['horizontal']
+            ax_ver = axes_d['vertical']
         kwargs['fig'] = fig
         kwargs['ax_hor'] = ax_hor
         kwargs['ax_ver'] = ax_ver
