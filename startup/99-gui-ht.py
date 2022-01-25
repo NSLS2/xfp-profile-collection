@@ -665,8 +665,10 @@ class XFPSampleSelector:
         self.dets_combo.setEnabled(False)
 
         # We need to create a figure _before_ submitting a plan.
-        fig = plt.figure('Align with <{}> motor and <{}> detector'.format(ht.name, det.name),
-                         figsize=(16, 5))
+        fig = plt.figure(
+            f'Align with <{ht.name}> motor and <{det.name}> detector',
+            figsize=(16, 5)
+        )
         axes_d = {ax.get_label(): ax for ax in fig.axes}
         if 'horizontal' not in axes_d:
             ax_hor = fig.add_subplot(121, label='horizontal')
