@@ -1,3 +1,5 @@
+'''Prototype plan for in vivo dose-response experiment with a food pump'''
+
 def pump_plan(volume, rate):
     yield from bps.abs_set(pump.volume, volume, group='pump')
     yield from bps.abs_set(pump.infusion_rate, rate, group='pump')

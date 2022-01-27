@@ -1,7 +1,8 @@
 '''Purpose: define ophyd objects for:
-1. Sydor BPM electrometer readout (via modified NSLS2_EM)
-2. EpicsMotor motions for bpm alignment
-3. Sydor PBG bias control and thermocouple readout
+1. Sydor BPM
+    a. electrometer readout (via modified NSLS2_EM)
+    b. EpicsMotor motions for bpm alignment
+2. Sydor PBG bias control and thermocouple readout
 '''
 
 class SydorBPM(Device):
@@ -15,11 +16,11 @@ class SydorBPM(Device):
 
 sydor_bpm = SydorBPM('XF:17BM-BI{EM:BPM1}', name='sydor_bpm')
 
-class BPM(Device):
+class DBPM(Device):
     x = Cpt(EpicsMotor, 'X}Mtr')
     y = Cpt(EpicsMotor, 'Y}Mtr')
 
-bpm1 = BPM('XF:17BMA-OP{Bpm:1-Ax:', name='bpm1')
+dbpm = DBPM('XF:17BMA-OP{Bpm:1-Ax:', name='dbpm')
 
 class SydorPBG(Device):
     temp_w = Cpt(EpicsSignalRO, 'ThermocoupleW')

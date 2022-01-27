@@ -3,7 +3,19 @@
 import datetime
 
 def flow(diameter, rate, tgt_vol, *, md=None):
+    '''Run syringe-pump capillary flow experiment
 
+    Parameters
+    ----------
+    diameter : float
+        syringe diameter in mm
+
+    rate : float
+        rate of flow in mL / min
+
+    tgt_vol : float
+        volume to collect with exposure in mL
+    '''
     dets = [shutter, spump]
 
     if md is None:
