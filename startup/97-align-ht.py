@@ -6,7 +6,7 @@ from bluesky.callbacks.fitting import PeakStats
 
 
 HT_X_START = 0.75
-HT_Y_START = -76.20
+HT_Y_START = -76.40
 HT_COORDS_FILE = str(PROFILE_STARTUP_PATH / 'ht_coords.csv')
 HT_COORDS_FILE_OLD = str(PROFILE_STARTUP_PATH / 'ht_coords_old.csv')
 LOAD_POS_X = -90
