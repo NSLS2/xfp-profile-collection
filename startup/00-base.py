@@ -16,7 +16,7 @@ from matplotlib._pylab_helpers import Gcf
 from matplotlib.backends.backend_qt5 import _create_qApp
 
 # Disable Best Effort Callback at the moment (01/18/2018):
-nslsii.configure_base(get_ipython().user_ns, "xfp", bec=False, pbar=False)
+nslsii.configure_base(get_ipython().user_ns, "xfp", bec=False, pbar=False, publish_documents_with_kafka=True)
 
 # nice format string to use in various places
 _time_fmtstr = "%Y-%m-%d %H:%M:%S"
