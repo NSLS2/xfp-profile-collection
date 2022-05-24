@@ -12,17 +12,13 @@ from ophyd import (EpicsMotor, Device,
 #ring current
 beam_ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
 
-#FE slits
+#FE slits, real motors only
 
 class FE_WhiteBeam_Slits(Device):
     top = Cpt(EpicsMotor, '1-Ax:T}Mtr')
     bot = Cpt(EpicsMotor, '2-Ax:B}Mtr')
     inb = Cpt(EpicsMotor, '2-Ax:I}Mtr')
     outb = Cpt(EpicsMotor, '1-Ax:O}Mtr')
-    h_size = Cpt(EpicsMotor, '12-Ax:X}size')
-    v_size = Cpt(EpicsMotor, '12-Ax:Y}size')
-    h_ctr = Cpt(EpicsMotor, '12-Ax:X}center')
-    v_ctr = Cpt(EpicsMotor, '12-Ax:Y}center')
 
 fe_wb_slits = FE_WhiteBeam_Slits('FE:C17B-OP{Slt:', name='fe_wb_slits')
 
