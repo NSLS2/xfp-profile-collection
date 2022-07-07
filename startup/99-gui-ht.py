@@ -703,6 +703,7 @@ class XFPSampleSelector:
     def plan(self, file_name=None):
 
         def close_shutters():
+            yield from bps.mv(qem1.ts.acquire, 0)
             yield from bps.mv(pre_shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
@@ -727,6 +728,8 @@ class XFPSampleSelector:
 
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Open')
+            
+            yield from bps.mv(qem1.ts.acquire, 1)
 
             for gui_d in self.walk_values():
                 d = dict(base_md)
@@ -821,8 +824,11 @@ def xfp_plan_fast_shutter(d, shutter_per_slot):
 
     if shutter_per_slot:
         yield from bps.mv(pre_shutter, 'Close')
+    
+    #sleep of ca. 0.2 sec seems to be necessary for array data to be written
+    yield from bps.sleep(0.25)
 
-    return (yield from bp.count([ht.x, ht.y], md=d))
+    return (yield from bp.count([ht.x, ht.y, qem1.ts], md=d))
 
 try:
     HTgui.close()

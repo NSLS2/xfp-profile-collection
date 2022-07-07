@@ -73,6 +73,9 @@ class XFPQuadEM(QuadEMV33):
 
 
 qem1 = XFPQuadEM("XF:17BM-BI{EM:1}EM180:", name="qem1")
+qem1.kind = "normal"
+qem1.ts.kind = "normal"
+
 #TODO: add later when it's repared
 # qem2 = XFPQuadEM("XF:17BM-BI{EM:BPM1}", name='qem2')
 #TODO: read in current1, 2, 4 for qem1
