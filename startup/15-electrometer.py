@@ -34,7 +34,7 @@ class TimeSeries(Device):
     acquire_mode = ADCpt(EpicsSignal, "TSAcquireMode", string=True, kind='config')
     acquiring = ADCpt(EpicsSignalRO, "TSAcquiring", kind='omitted')
 
-    time_axis = ADCpt(EpicsSignalRO, "TSTimeAxis", kind='config')
+    time_axis = ADCpt(EpicsSignalRO, "TSTimeAxis", kind='normal')
     read_rate = ADCpt(EpicsSignal, "TSRead.SCAN", string=True, kind='config')
     num_points = ADCpt(EpicsSignal, "TSNumPoints", kind='config')
     averaging_time = ADCpt(EpicsSignalWithRBV, "TSAveragingTime", kind="config")
