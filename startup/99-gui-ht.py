@@ -828,7 +828,7 @@ def xfp_plan_fast_shutter(d, shutter_per_slot):
     #sleep of ca. 0.2 sec seems to be necessary for array data to be written
     yield from bps.sleep(0.25)
 
-    return (yield from bp.count([ht.x, ht.y, qem1.ts], md=d))
+    return (yield from bp.count([ht.x, ht.y, qem1.ts.current1, qem1.ts.time_axis], md=d))
 
 try:
     HTgui.close()
