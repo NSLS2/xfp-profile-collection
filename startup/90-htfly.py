@@ -7,11 +7,20 @@
 LOAD_HTFLY_POS_X = -285
 EXPOSED_HTFLY_POS_X = 285
 
-#Define vertical positions
+#Define vertical position of row 3
 row3_y_vert = -2.9
+
+def htfly_move_to_load():
+    if htfly.x.position != LOAD_HTFLY_POS_X:
+        print("Moving to load position")
+        yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
+    else:
+        print("Already there!")
+
 
 def htfly_exp_row(row_num, htfly_vel, hslit_size):
     '''Function to expose a single row on the HTFly device.
+    Moves device back to load position after exposure.
     Prerequisites: FE photon shutter and pre-shutter must be open
 
     Parameters
@@ -69,29 +78,34 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size):
         yield from bps.mv(htfly.y, row3_y_vert+27)
     else:
         raise ValueError("Row value must be in the range 1-6!")
-        
+    
+    #Check that HTFly is at load position and move it there before opening shutters.
     if htfly.x.position != LOAD_HTFLY_POS_X:
-        print("Moving to load position")
+        print("Moving to load position.")
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
-
-    #For now, add logic to catch shutters being closed and abort run.
-
+    
+    #Check state of pps_shutter and pre_shutter and open if needed.
+    #This nomenclature allows the shutters to remain open after RE completes.
     if pps_shutter.status.get() == 'Not Open':
-        raise Exception("The photon shutter is not open. Open the photon shutter first.")
+        print("The photon shutter was closed and is being opened.")
+        pps_shutter.set('Open')
+        yield from bps.sleep(2)   #Allow some wait time for the shutter opening to finish
+        #    raise Exception("The photon shutter is not open. Open the photon shutter first.")
         
     if pre_shutter.status.get() == 'Not Open':
-        raise Exception("The pre-shutter is not open! Open the pre-shutter first.")
+        print("The pre-shutter was closed and is being opened.")
+        pre_shutter.set('Open')
+        yield from bps.sleep(2)   #Allow some wait time for the shutter opening to finish
+    #    raise Exception("The pre-shutter is not open! Open the pre-shutter first.")
 
-    print("Pre-shutter and PPS shutter are open. Opening the sample shutter.")
+    print("Pre-shutter and PPS shutter are open. Opening the sample shutter and Uniblitz.")
   
     yield from bps.mv(diode_shutter, 'open')
-    
-    #Open Uniblitz shutter silently
     yield from bps.mv(dg, 30)               #set Uniblitz opening time
     yield from bps.mv(dg.fire, 1)           #fire Uniblitz
     
-    print("Row " + str(row_num) + " being exposed at " + str(htfly_vel) + " mm/sec and a " + str(hslit_size) + " mm slit size.")
-    print("This corresponds to an exposure time of " + str(htfly_exp_time) + " milliseconds.")
+    print("Row " + str(row_num) + " being exposed at " + str(htfly_vel) + " mm/sec and a " + str(hslit_size) + " mm horizontal slit.")
+    print("This corresponds to an exposure time of " + str(round(htfly_exp_time, 3)) + " milliseconds.")
     yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
     
     #Cleanup: close shutters, return to load position.
