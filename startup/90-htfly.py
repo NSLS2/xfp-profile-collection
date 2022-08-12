@@ -18,48 +18,56 @@ def htfly_move_to_load():
         print("Already there!")
 
 
-def htfly_exp_row(row_num, htfly_vel, hslit_size):
-    '''Function to expose a single row on the HTFly device.
-    Moves device back to load position after exposure.
-    Prerequisites: FE photon shutter and pre-shutter must be open
+def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness):
+    '''
+    Function to expose a single row on the HTFly device, specifying velocity, 
+    slit size, and attenuation. Moves device back to load position after exposure.
+    Leaves FE shutter and pre-shutter open after run.
 
     Parameters
     ----------
     row_num: integer
-        Row number on HTFly exposure cell, must be in the range 1 - 6
+        Row number on HTFly exposure cell. 
+        Must be in the range 1 - 6
 
     htfly_vel: float
-        HTFly X stage velocity in mm/sec, must be between 1 - 500 mm/sec
+        HTFly fast x stage velocity in mm/sec.
+        Must be between 1 - 500 mm/sec
 
     hslit_size: float
-        ADC horizontal slit size in mm, must be > 0.
+        BIFS ADC horizontal slit size in mm.
+        Must be > 0.
+
+    al_thickness: integer
+        Aluminum attenuator thickness in um.
+        Must be an entry in the list [762, 508, 305, 203, 152, 76, 25, 0]
     
     '''
 
-    #Calculate exposure time in milliseconds
-    htfly_exp_time = (hslit_size / htfly_vel) * 1000
+    #Calculate exposure time in milliseconds, rounded to 3 decimal places
+    htfly_exp_time = round((hslit_size / htfly_vel) * 1000, 3)
     
     #Set HTFly velocity.
     if htfly_vel <= 0:
-        raise ValueError("Enter a velocity greater than 0 mm/sec!")
+        raise ValueError(f"You entered {htfly_vel} mm/s. Enter a velocity greater than 0 mm/sec!")
     if htfly_vel > 500:
-        raise ValueError("Enter a velocity less than or equal to 500 mm/sec!")
+        raise ValueError(f"You entered {htfly_vel} mm/s. Enter a velocity less than or equal to 500 mm/sec!")
     else:
-        print("Setting htfly_x stage velocity to " + str(htfly_vel) + " mm/sec.")
+        print(f"Setting htfly_x stage velocity to {htfly_vel} mm/sec.")
         yield from bps.mv(htfly.x.velocity, htfly_vel)
         
     #Set ADC slit size, trap exception if a negative number is entered or value > 6 is entered
     if hslit_size <= 0:
-        raise ValueError("Enter a positive horizontal slit size!")
+        raise ValueError(f"You entered {hslit_size} mm slit size. Enter a positive horizontal slit size!")
     elif hslit_size > 6:
-        raise ValueError("Enter a horizontal slit size smaller than 6 mm!")
+        raise ValueError(f"You entered {hslit_size} mm slit size. Enter a horizontal slit size smaller than 6 mm!")
     else:        
-        print("Moving the ADC horizontal slit size to " + str(hslit_size) + " mm.")
+        print(f"Moving the ADC horizontal slit size to {hslit_size} mm.")
         yield from bps.mv(adcslits.xgap, hslit_size)
             
     #Move to desired row number, throw exception if row /= 1-6
     if row_num == 1:
-        print("moving to row1")
+        print("moving to row 1")
         yield from bps.mv(htfly.y, row3_y_vert-18)
     elif row_num == 2:
         print("moving to row 2")
@@ -77,8 +85,23 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size):
         print("moving to row 6")
         yield from bps.mv(htfly.y, row3_y_vert+27)
     else:
-        raise ValueError("Row value must be in the range 1-6!")
+        raise ValueError(f"You entered row {row_num}. Row value must be in the range 1 - 6!")
     
+    #Move filter wheel to desired attenuation, and fail if not in the list of available attenuations.
+    if al_thickness in [762, 508, 305, 203, 152, 76, 25, 0]:
+        print(f"Moving filter wheel to {al_thickness} um Al attenuation.")
+        yield from bps.mv(filter_wheel.thickness, al_thickness)
+    else:
+        raise ValueError(f"{al_thickness} is not an available attenuator. Choose from: 762, 508, 305, 203, 152, 76, 25, or 0")
+
+    #More elegant solution that reviews the filter_wheel list of dictionaries. It appears to run.
+    #However RunEngine crashes w/ TypeError: Nonetype is not iterable.
+    #if not any(d['thickness'] == al_thickness for d in filter_wheel.wheel_positions):
+    #    raise ValueError("Attenuator must be one of: 762, 508, 305, 203, 152, 76, 25, or 0")
+    #else:
+    #    print("Moving filter wheel to " + str(al_thickness) + "um Al attenuation.")
+    #    yield from bps.mv(filter_wheel.thickness, al_thickness)
+
     #Check that HTFly is at load position and move it there before opening shutters.
     if htfly.x.position != LOAD_HTFLY_POS_X:
         print("Moving to load position.")
@@ -86,17 +109,18 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size):
     
     #Check state of pps_shutter and pre_shutter and open if needed.
     #This nomenclature allows the shutters to remain open after RE completes.
+    if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+    
     if pps_shutter.status.get() == 'Not Open':
-        print("The photon shutter was closed and is being opened.")
+        print("The photon shutter was closed and is now being opened.")
         pps_shutter.set('Open')
-        yield from bps.sleep(2)   #Allow some wait time for the shutter opening to finish
-        #    raise Exception("The photon shutter is not open. Open the photon shutter first.")
+        yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
         
     if pre_shutter.status.get() == 'Not Open':
-        print("The pre-shutter was closed and is being opened.")
+        print("The pre-shutter was closed and is now being opened.")
         pre_shutter.set('Open')
-        yield from bps.sleep(2)   #Allow some wait time for the shutter opening to finish
-    #    raise Exception("The pre-shutter is not open! Open the pre-shutter first.")
+        yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
 
     print("Pre-shutter and PPS shutter are open. Opening the sample shutter and Uniblitz.")
   
@@ -104,8 +128,8 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size):
     yield from bps.mv(dg, 30)               #set Uniblitz opening time
     yield from bps.mv(dg.fire, 1)           #fire Uniblitz
     
-    print("Row " + str(row_num) + " being exposed at " + str(htfly_vel) + " mm/sec and a " + str(hslit_size) + " mm horizontal slit.")
-    print("This corresponds to an exposure time of " + str(round(htfly_exp_time, 3)) + " milliseconds.")
+    print(f"Row {row_num} is being exposed at {htfly_vel} mm/sec and a {hslit_size} mm horizontal slit.")
+    print(f"This corresponds to an exposure time of {htfly_exp_time} milliseconds.")
     yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
     
     #Cleanup: close shutters, return to load position.
