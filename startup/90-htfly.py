@@ -119,18 +119,19 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
         #If the pps_shutter is disabled, exit and inform the user.
         #This nomenclature allows the shutters to remain open after RE completes.
-        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
-            raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+        #Comment out photon shutter / pre-shutter code for 2022-2 shutdown work.
+        #if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        #    raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
     
-        if pps_shutter.status.get() == 'Not Open':
-            print("The photon shutter was closed and is now being opened.")
-            pps_shutter.set('Open')
-            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        #if pps_shutter.status.get() == 'Not Open':
+        #    print("The photon shutter was closed and is now being opened.")
+        #    pps_shutter.set('Open')
+        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
         
-        if pre_shutter.status.get() == 'Not Open':
-            print("The pre-shutter was closed and is now being opened.")
-            pre_shutter.set('Open')
-            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        #if pre_shutter.status.get() == 'Not Open':
+        #    print("The pre-shutter was closed and is now being opened.")
+        #    pre_shutter.set('Open')
+        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
    
     @bpp.run_decorator(md=_md)
     def inner_htfly_exp():
@@ -139,11 +140,12 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         yield from htfly_exp_setup()
 
         #Open sample shutter and do the exposure.
-        print("Pre-shutter and PPS shutter are open. Opening the sample shutter and Uniblitz.")
+        print("Pre-shutter and PPS shutter are open. Opening the sample shutter.")
   
         yield from bps.mv(diode_shutter, 'open')
-        yield from bps.mv(dg, 30)               #set Uniblitz opening time
-        yield from bps.mv(dg.fire, 1)           #fire Uniblitz
+        #Comment out Uniblitz actuation.
+        #yield from bps.mv(dg, 30)               #set Uniblitz opening time
+        #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
     
         print(f"\nExposing row {row_num} at {htfly_vel}mm/sec with a {hslit_size}mm horizontal slit and {al_thickness}um Al attenuation.")
         print(f"This corresponds to an exposure time of {htfly_exp_time} milliseconds.\n")
@@ -152,7 +154,7 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         #Cleanup: close shutters, return to load position.
         print("Closing sample shutter and returning to load position")
         yield from bps.mv(diode_shutter, 'close')
-        yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
+        #yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
         yield from bps.sleep(1)
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
         print("All done, ready for another row!")
