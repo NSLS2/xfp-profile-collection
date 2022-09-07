@@ -108,7 +108,7 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         if not any(d['thickness'] == al_thickness for d in filter_wheel.wheel_positions):
             raise ValueError(f"{al_thickness} is not an available attenuator. Choose from: 762, 508, 305, 203, 152, 76, 25, or 0")
         else:
-            print("Moving filter wheel to " + str(al_thickness) + "um Al attenuation.")
+            print(f"Moving filter wheel to {al_thickness} um Al attenuation.")
             yield from bps.mv(filter_wheel.thickness, al_thickness)
 
         #Check that HTFly is at load position and move it there before opening shutters.
@@ -119,19 +119,18 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
         #If the pps_shutter is disabled, exit and inform the user.
         #This nomenclature allows the shutters to remain open after RE completes.
-        #Comment out photon shutter / pre-shutter code for 2022-2 shutdown work.
-        #if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
-        #    raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+            raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
     
-        #if pps_shutter.status.get() == 'Not Open':
-        #    print("The photon shutter was closed and is now being opened.")
-        #    pps_shutter.set('Open')
-        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        if pps_shutter.status.get() == 'Not Open':
+            print("The photon shutter was closed and is now being opened.")
+            pps_shutter.set('Open')
+            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
         
-        #if pre_shutter.status.get() == 'Not Open':
-        #    print("The pre-shutter was closed and is now being opened.")
-        #    pre_shutter.set('Open')
-        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        if pre_shutter.status.get() == 'Not Open':
+            print("The pre-shutter was closed and is now being opened.")
+            pre_shutter.set('Open')
+            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
    
     @bpp.run_decorator(md=_md)
     def inner_htfly_exp():
