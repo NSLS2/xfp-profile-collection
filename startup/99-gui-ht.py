@@ -1,3 +1,4 @@
+import os.path
 import warnings
 # plt.ion()
 # from bluesky.utils import install_qt_kicker
@@ -716,8 +717,28 @@ class XFPSampleSelector:
             if file_name is None:
                 gui_path = self.path_select.path
                 if gui_path and reason:
+                    if '/' in reason:
+                        raise Exception('File name cannot include reserved character "/".')
+                        xfp_print('File name cannot include reserved character "/".')
+                        return
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
+                else:
+                    raise Exception("No gui path/reason entered, resolve this and retry.")
+                    xfp_print("No gui path/reason entered, resolve this and retry.")
+                    return
+            if os.path.isfile(file_name):
+                raise Exception(f"File name {file_name} already in use, change names and retry")
+                xfp_print(f"File name {file_name} already in use, change names and retry")
+                return
+                #i = 1
+                #base_name, _ = os.path.splitext(file_name)
+                #while True:
+                #    if os.path.isfile(os.path.join(base_name, f'_{i}', '.csv')):
+                #        i = i+1
+                #    else:
+                #        file_name = os.path.join(base_name, f'_{i}', '.csv')
+                #        break
             xfp_print(f'CSV file name: {file_name}')
 
             uid_list = []

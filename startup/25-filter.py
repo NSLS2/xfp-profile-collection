@@ -9,14 +9,14 @@ class PseudoFilterWheel(PseudoPositioner):
 
     # dict consists of the following fields:
     # position number: angle [degrees], thickness of material [um]
-    wheel_positions = [{'name': 'Position 1', 'angle': 0, 'thickness': 0},
-                       {'name': 'Position 2', 'angle': 45, 'thickness': 762},
-                       {'name': 'Position 3', 'angle': 90, 'thickness': 508},
-                       {'name': 'Position 4', 'angle': 135, 'thickness': 305},
-                       {'name': 'Position 5', 'angle': 180, 'thickness': 203},
-                       {'name': 'Position 6', 'angle': 225, 'thickness': 152},
-                       {'name': 'Position 7', 'angle': 270, 'thickness': 76},
-                       {'name': 'Position 8', 'angle': 315, 'thickness': 25}]
+    wheel_positions = [{'name': 'Position 1', 'angle': 0., 'thickness': 0},
+                       {'name': 'Position 2', 'angle': 45., 'thickness': 762},
+                       {'name': 'Position 3', 'angle': 90., 'thickness': 508},
+                       {'name': 'Position 4', 'angle': 135., 'thickness': 305},
+                       {'name': 'Position 5', 'angle': 180., 'thickness': 203},
+                       {'name': 'Position 6', 'angle': 225., 'thickness': 152},
+                       {'name': 'Position 7', 'angle': 270., 'thickness': 76},
+                       {'name': 'Position 8', 'angle': 315., 'thickness': 25}]
 
     _tolerance = 1e-2
     _thickness_egu = 'um'
