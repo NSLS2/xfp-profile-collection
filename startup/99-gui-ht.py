@@ -320,7 +320,7 @@ class FileSelector:
                                                'Location': str,
                                                'Sample name': str,
                                                'Exposure time (ms)': float,
-                                               'Filter Thickness (um)': float,
+                                               'Filter Thickness (um)': int,
                                                'Notes': str},
                                         keep_default_na=False)
         self.excel_data.columns = ['slot',
@@ -719,26 +719,13 @@ class XFPSampleSelector:
                 if gui_path and reason:
                     if '/' in reason:
                         raise Exception('File name cannot include reserved character "/".')
-                        xfp_print('File name cannot include reserved character "/".')
-                        return
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
                 else:
                     raise Exception("No gui path/reason entered, resolve this and retry.")
-                    xfp_print("No gui path/reason entered, resolve this and retry.")
-                    return
             if os.path.isfile(file_name):
                 raise Exception(f"File name {file_name} already in use, change names and retry")
-                xfp_print(f"File name {file_name} already in use, change names and retry")
-                return
-                #i = 1
-                #base_name, _ = os.path.splitext(file_name)
-                #while True:
-                #    if os.path.isfile(os.path.join(base_name, f'_{i}', '.csv')):
-                #        i = i+1
-                #    else:
-                #        file_name = os.path.join(base_name, f'_{i}', '.csv')
-                #        break
+
             xfp_print(f'CSV file name: {file_name}')
 
             uid_list = []
