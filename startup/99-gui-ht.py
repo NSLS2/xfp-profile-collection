@@ -704,7 +704,8 @@ class XFPSampleSelector:
     def plan(self, file_name=None):
 
         def close_shutters():
-            yield from bps.mv(pre_shutter, 'Close')
+            yield from bps.mv(diode_shutter, 'Close')
+            # yield from bps.mv(pre_shutter, 'Close')
             yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y)  # load position
 
@@ -760,6 +761,8 @@ class XFPSampleSelector:
                 # Open it once, when the holder arrives to the first scanning point:
                 if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked():
                     yield from bps.mv(pre_shutter, 'Open')
+                if diode_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked():
+                    yield from bps.mv(diode_shutter, 'Open')
 
                 # Check that the shutters are opened before collecting data:
                 if not mode.test_mode:
@@ -767,6 +770,8 @@ class XFPSampleSelector:
                         raise Exception(f'{pps_shutter.name} must be open to finish the scan')
                     if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
                         raise Exception(f'{pre_shutter.name} must be open to finish the scan')
+                    if diode_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
+                        raise Exception(f'{diode_shutter.name} must be open to finish the scan')
 
                 uid = (yield from xfp_plan_fast_shutter(d,
                                                         shutter_per_slot=self.checkbox_shutter.isChecked()))
@@ -789,7 +794,8 @@ class XFPSampleSelector:
 
             # Close it once the walkthrough is done:
             if not self.checkbox_shutter.isChecked():
-                yield from bps.mv(shutter, 'Close')
+                # yield from bps.mv(shutter, 'Close')
+                yield from bps.mv(diode_shutter, 'Close')
 
             from bluesky.utils import FailedStatus
             try:
@@ -821,14 +827,16 @@ def xfp_plan_fast_shutter(d, shutter_per_slot):
     yield from bps.mv(dg, exp_time)
 
     if shutter_per_slot:
-        yield from bps.mv(pre_shutter, 'Open')
+        # yield from bps.mv(pre_shutter, 'Open')
+        yield from bps.mv(diode_shutter, 'Open')
 
     # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg.fire, 1)
     yield from bps.sleep(exp_time*1.1)
 
     if shutter_per_slot:
-        yield from bps.mv(pre_shutter, 'Close')
+        # yield from bps.mv(pre_shutter, 'Close')
+        yield from bps.mv(diode_shutter, 'Close')
 
     return (yield from bp.count([ht.x, ht.y], md=d))
 
