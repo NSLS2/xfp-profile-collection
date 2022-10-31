@@ -759,7 +759,7 @@ class XFPSampleSelector:
                 self.re_controls.info_label.setText(motors_positions([ht.x, ht.y]))
 
                 # Open it once, when the holder arrives to the first scanning point:
-                if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked():
+                if pre_shutter.status.get() == 'Not Open':
                     yield from bps.mv(pre_shutter, 'Open')
                 if diode_shutter.status_closed.get() == 1 and not self.checkbox_shutter.isChecked():
                     yield from bps.mv(diode_shutter, 'Open')
@@ -768,7 +768,7 @@ class XFPSampleSelector:
                 if not mode.test_mode:
                     if pps_shutter.status.get() == 'Not Open':
                         raise Exception(f'{pps_shutter.name} must be open to finish the scan')
-                    if pre_shutter.status.get() == 'Not Open' and not self.checkbox_shutter.isChecked() :
+                    if pre_shutter.status.get() == 'Not Open':
                         raise Exception(f'{pre_shutter.name} must be open to finish the scan')
                     if diode_shutter.status_closed.get() == 1 and not self.checkbox_shutter.isChecked() :
                         raise Exception(f'{diode_shutter.name} must be open to finish the scan')
