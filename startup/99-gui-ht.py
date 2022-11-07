@@ -680,6 +680,9 @@ class XFPSampleSelector:
         kwargs['ax_hor'] = ax_hor
         kwargs['ax_ver'] = ax_ver
 
+        self._align_ht_ax_hor = ax_hor
+        self._align_ht_ax_ver = ax_ver
+
         RE(align_ht(**kwargs))
         self.dets_combo.setEnabled(True)
         self.update_locations(HT_COORDS['x'][self._slot_index[0]],

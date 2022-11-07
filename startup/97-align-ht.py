@@ -163,7 +163,13 @@ def _align_ht(dir_name, mtr,
 
     xfp_print(pprint.pformat(ps_dict))
 
+    msg = f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm'
+    xfp_print(msg)
+
     ax.set_title(f'COM: {ps.com:.2f} mm  FWHM: {ps.fwhm:.2f} mm')
+    ax.figure.canvas.draw_idle()
+
+    xfp_print(f"ax.title = {ax.title}")
 
     yield from bps.mv(shutter, 'Close')  # close the protective shutter
     yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
