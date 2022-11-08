@@ -26,6 +26,10 @@ def get_index_from_position(positions, field, current_pos, tolerance=1e-8):
     return None
 
 
+class FileInvalidException(Exception):
+    pass
+
+
 class ColumnWidget:
     def __init__(self, j, *, filter_obj=None, data=None):
         self._position = j
@@ -718,13 +722,13 @@ class XFPSampleSelector:
                 gui_path = self.path_select.path
                 if gui_path and reason:
                     if '/' in reason:
-                        raise Exception('File name cannot include reserved character "/".')
+                        raise FileInvalidException('File name cannot include reserved character "/".')
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
                 else:
-                    raise Exception("No gui path/reason entered, resolve this and retry.")
+                    raise FileInvalidException("No gui path/reason entered, resolve this and retry.")
             if os.path.isfile(file_name):
-                raise Exception(f"File name {file_name} already in use, change names and retry")
+                raise FileInvalidException(f"File name {file_name} already in use, change names and retry")
 
             xfp_print(f'CSV file name: {file_name}')
 
