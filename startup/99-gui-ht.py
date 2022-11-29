@@ -1,3 +1,4 @@
+import os.path
 import warnings
 # plt.ion()
 # from bluesky.utils import install_qt_kicker
@@ -23,6 +24,10 @@ def get_index_from_position(positions, field, current_pos, tolerance=1e-8):
         if abs(pos[field] - current_pos) < tolerance:
             return idx
     return None
+
+
+class FileInvalidException(Exception):
+    pass
 
 
 class ColumnWidget:
@@ -319,7 +324,7 @@ class FileSelector:
                                                'Location': str,
                                                'Sample name': str,
                                                'Exposure time (ms)': float,
-                                               'Filter Thickness (um)': float,
+                                               'Filter Thickness (um)': int,
                                                'Notes': str},
                                         keep_default_na=False)
         self.excel_data.columns = ['slot',
@@ -719,8 +724,15 @@ class XFPSampleSelector:
             if file_name is None:
                 gui_path = self.path_select.path
                 if gui_path and reason:
+                    if '/' in reason:
+                        raise FileInvalidException('File name cannot include reserved character "/".')
                     fname = '_'.join(reason.split()) + '.csv'
                     file_name = os.path.join(gui_path, fname)
+                else:
+                    raise FileInvalidException("No gui path/reason entered, resolve this and retry.")
+            if os.path.isfile(file_name):
+                raise FileInvalidException(f"File name {file_name} already in use, change names and retry")
+
             xfp_print(f'CSV file name: {file_name}')
 
             uid_list = []
