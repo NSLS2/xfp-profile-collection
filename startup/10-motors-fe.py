@@ -35,7 +35,7 @@ class XFP_FE_Mirror(Device):
     Y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
     pitch = Cpt(EpicsMotor, '-Ax:P}Mtr')
     yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr')
-    roll = Cpt(EpicsMotor, '-Ax:P}Mtr')
+    roll = Cpt(EpicsMotor, '-Ax:R}Mtr')
     temp1 = Cpt(EpicsSignalRO, '}T:1-I')
     temp2 = Cpt(EpicsSignalRO, '}T:2-I')
 
