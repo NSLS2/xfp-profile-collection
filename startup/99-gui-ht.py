@@ -339,7 +339,7 @@ class FileSelector:
                                                'Filter Thickness (um)': int,
                                                'Notes': str},
                                         converters={'Exposure time (ms)': flt_con,
-                                                    'Filter Thickness (um': int_con},
+                                                    'Filter Thickness (um)': int_con},
                                         keep_default_na=False)
         self.excel_data.columns = ['slot',
                                    'location',
