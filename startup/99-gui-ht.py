@@ -319,13 +319,25 @@ class FileSelector:
         self.update_cells()
 
     def update_cells(self):
+        def int_con(str_val):
+            if str_val == '':
+                return(0)
+            else:
+                return(int(str_val))
+
+        def flt_con(str_val):
+            if str_val == '':
+                return(0.)
+            else:
+                return(float(str_val))
+
         self.excel_data = pd.read_excel(self.file_name,
                                         dtype={'Slot (0-95)': int,
                                                'Location': str,
                                                'Sample name': str,
-                                               'Exposure time (ms)': float,
-                                               'Filter Thickness (um)': int,
                                                'Notes': str},
+                                        converters={'Exposure time (ms)': flt_con,
+                                                    'Filter Thickness (um)': int_con},
                                         keep_default_na=False)
         self.excel_data.columns = ['slot',
                                    'location',
