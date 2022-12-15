@@ -335,8 +335,6 @@ class FileSelector:
                                         dtype={'Slot (0-95)': int,
                                                'Location': str,
                                                'Sample name': str,
-                                               'Exposure time (ms)': float,
-                                               'Filter Thickness (um)': int,
                                                'Notes': str},
                                         converters={'Exposure time (ms)': flt_con,
                                                     'Filter Thickness (um)': int_con},
