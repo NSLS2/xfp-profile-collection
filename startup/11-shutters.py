@@ -100,7 +100,7 @@ class DiodeShutter(Device):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.allowed_values = {'open': 1, 'close': 0}
+        self.allowed_values = {'Open': 1, 'Close': 0}
 
     def set(self, value):
         assert value in self.allowed_values.keys(), \

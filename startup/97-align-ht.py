@@ -59,7 +59,8 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     _y_start = None
     if run:
         def close_shutters():
-            yield from bps.mv(shutter, 'Close')
+            yield from bps.mv(diode_shutter, 'Close')
+            # yield from bps.mv(shutter, 'Close')
             if not mode.test_mode:
                 yield from bps.mv(pps_shutter, 'Close')
             yield from bps.mv(ht.x, LOAD_POS_X, ht.y, LOAD_POS_Y)  # load position
@@ -148,6 +149,7 @@ def _align_ht(dir_name, mtr,
     yield from bps.mv(dg, 600)  # generate 600-seconds pulse
     yield from bps.mv(dg.fire, 1)
     yield from bps.mv(shutter, 'Open')  # open the protective shutter
+    yield from bps.mv(diode_shutter, 'Open')
 
     uid = yield from bpp.subs_wrapper(
             bp.scan([det],
@@ -171,7 +173,8 @@ def _align_ht(dir_name, mtr,
 
     xfp_print(f"ax.title = {ax.title}")
 
-    yield from bps.mv(shutter, 'Close')  # close the protective shutter
+    yield from bps.mv(diode_shutter, 'Close')
+    #yield from bps.mv(shutter, 'Close')  # close the protective shutter
     yield from bps.mv(dg, 0)  # set delay to 0 (causes interruption of the current pulse)
 
     yield from bps.checkpoint()
