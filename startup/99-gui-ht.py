@@ -503,7 +503,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.re_controls.widget)
 
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Preshutter per sample?')
+        self.checkbox_shutter = QtWidgets.QCheckBox('Sample shutter per sample?')
         self.checkbox_shutter.setChecked(False)
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)

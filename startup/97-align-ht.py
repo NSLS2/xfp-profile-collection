@@ -148,7 +148,8 @@ def _align_ht(dir_name, mtr,
     # fire the fast shutter and wait for it to close again
     yield from bps.mv(dg, 600)  # generate 600-seconds pulse
     yield from bps.mv(dg.fire, 1)
-    yield from bps.mv(shutter, 'Open')  # open the protective shutter
+    if pre_shutter.status.get() == 'Not Open':
+        yield from bps.mv(shutter, 'Open')  # open the pre-shutter if it is closed
     yield from bps.mv(diode_shutter, 'Open')
 
     uid = yield from bpp.subs_wrapper(
