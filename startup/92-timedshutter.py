@@ -144,14 +144,14 @@ def timed_uniblitz_ss(fire_time):
     fire_time: float
         Exposure time in seconds
     '''
-    yield from bps.mv(diode_shutter, 'open')
+    yield from bps.mv(diode_shutter, 'Open')
     print("Opened DIODE sample shutter.")
     if fire_time <= 0.5:                            #sample-shutter sleep for short exposure times   
         yield from bps.sleep(0.5)               
     yield from timed_uniblitz(fire_time)
     if fire_time <= 0.5:
         yield from bps.sleep(0.5)
-    yield from bps.mv(diode_shutter, 'close')
+    yield from bps.mv(diode_shutter, 'Close')
     print("Closed DIODE sample shutter.")
 
 #Functions to actuate sample shutter in BIFS
@@ -165,10 +165,10 @@ def timed_sam_shutter(ss_exp_time):
     ss_exp_time_time: float
         Exposure time in seconds
     '''
-    yield from bps.mv(diode_shutter, 'open')
+    yield from bps.mv(diode_shutter, 'Open')
     print("Opened DIODE sample shutter.")
     yield from bps.sleep(ss_exp_time)
-    yield from bps.mv(diode_shutter, 'close')
+    yield from bps.mv(diode_shutter, 'Close')
     print(f"Closed DIODE sample shutter after a {ss_exp_time} second(s) exposure.")
 
 def timed_sam_shutter_pre(ss_exp_time):
