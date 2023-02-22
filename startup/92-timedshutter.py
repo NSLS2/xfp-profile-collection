@@ -73,6 +73,7 @@ def timed_shutter(exp_time, *, md=None):
         
         yield from bps.abs_set(pps_shutter, 'Open', wait=True)
         print('FE shutter opened')
+        yield from bps.sleep(1)
         
         yield from bps.abs_set(shutter, 'Open', wait=True)
         yield from bps.trigger_and_read(dets)
@@ -86,6 +87,7 @@ def timed_shutter(exp_time, *, md=None):
         # close the shutters
         yield from bps.abs_set(shutter, 'Close', wait=True)
         print('closed pre-shutter')
+        yield from bps.sleep(1)
         yield from bps.abs_set(pps_shutter, 'Close', wait=True)
         print('closed FE shutter')
         yield from bps.trigger_and_read(dets)
