@@ -17,8 +17,8 @@ class SydorBPM(Device):
 sydor_bpm = SydorBPM('XF:17BM-BI{EM:BPM1}', name='sydor_bpm')
 
 class DBPM(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr')
-    y = Cpt(EpicsMotor, 'Y}Mtr')
+    x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP PDS',))
+    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('FP PDS',))
 
 dbpm = DBPM('XF:17BMA-OP{Bpm:1-Ax:', name='dbpm')
 

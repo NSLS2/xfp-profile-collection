@@ -15,27 +15,27 @@ beam_ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_curren
 #FE slits, real motors only
 
 class FE_WhiteBeam_Slits(Device):
-    top = Cpt(EpicsMotor, '1-Ax:T}Mtr')
-    bot = Cpt(EpicsMotor, '2-Ax:B}Mtr')
-    inb = Cpt(EpicsMotor, '2-Ax:I}Mtr')
-    outb = Cpt(EpicsMotor, '1-Ax:O}Mtr')
+    top = Cpt(EpicsMotor, '1-Ax:T}Mtr', labels=('FE Slits',))
+    bot = Cpt(EpicsMotor, '2-Ax:B}Mtr', labels=('FE Slits',))
+    inb = Cpt(EpicsMotor, '2-Ax:I}Mtr', labels=('FE Slits',))
+    outb = Cpt(EpicsMotor, '1-Ax:O}Mtr', labels=('FE Slits',))
 
 fe_wb_slits = FE_WhiteBeam_Slits('FE:C17B-OP{Slt:', name='fe_wb_slits')
 
 #FE mirror including thermocouple signals
 
 class XFP_FE_Mirror(Device):
-    hor_up = Cpt(EpicsMotor, '-Ax:XU}Mtr')
-    hor_down = Cpt(EpicsMotor, '-Ax:XD}Mtr')
-    lift_up = Cpt(EpicsMotor, '-Ax:YUI}Mtr')
-    lift_ctr = Cpt(EpicsMotor, '-Ax:YO}Mtr')
-    lift_down = Cpt(EpicsMotor, '-Ax:YDI}Mtr')
-    focus = Cpt(EpicsMotor, '-Ax:Bend}Mtr')
-    X = Cpt(EpicsMotor, '-Ax:X}Mtr')
-    Y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
-    pitch = Cpt(EpicsMotor, '-Ax:P}Mtr')
-    yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr')
-    roll = Cpt(EpicsMotor, '-Ax:R}Mtr')
+    hor_up = Cpt(EpicsMotor, '-Ax:XU}Mtr', labels=('FE Mirror',))
+    hor_down = Cpt(EpicsMotor, '-Ax:XD}Mtr', labels=('FE Mirror',))
+    lift_up = Cpt(EpicsMotor, '-Ax:YUI}Mtr', labels=('FE Mirror',))
+    lift_ctr = Cpt(EpicsMotor, '-Ax:YO}Mtr', labels=('FE Mirror',))
+    lift_down = Cpt(EpicsMotor, '-Ax:YDI}Mtr', labels=('FE Mirror',))
+    focus = Cpt(EpicsMotor, '-Ax:Bend}Mtr', labels=('FE Mirror',))
+    X = Cpt(EpicsMotor, '-Ax:X}Mtr', labels=('FE Mirror',))
+    Y = Cpt(EpicsMotor, '-Ax:Y}Mtr', labels=('FE Mirror',))
+    pitch = Cpt(EpicsMotor, '-Ax:P}Mtr', labels=('FE Mirror',))
+    yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr', labels=('FE Mirror',))
+    roll = Cpt(EpicsMotor, '-Ax:R}Mtr', labels=('FE Mirror',))
     temp1 = Cpt(EpicsSignalRO, '}T:1-I')
     temp2 = Cpt(EpicsSignalRO, '}T:2-I')
 
