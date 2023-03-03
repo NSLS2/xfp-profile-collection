@@ -1,6 +1,5 @@
-#Defines classes for beamline / ES:2 motors
+#Defines classes for beamline / endstation motors
 #Includes: all components in XFP PDS, ES:1, and ES:3.
-#ES:3 XAS components are defined in a separate section at bottom
 
 #This stuff should be imported by 10-fp-devices.py
 import time
@@ -53,14 +52,14 @@ htfly = HT('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
 #
 #bpm1 = BPM('XF:17BMA-OP{Bpm:1-Ax:', name='bpm1')
 
-#Amazon 50mm-100mm slides
+#Amazon 50mm-100mm slides, not usually connected
 class CVDViewer(Device):
     x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP ES:1',))
     y = Cpt(EpicsMotor, 'Y}Mtr', labels=('FP ES:1',))
 
 cvd = CVDViewer('XF:17BMA-ES:1{CVD:1-Ax:', name='cvd')
 
-#CF sample collector (Amaazon slide)
+#CF sample collector (Amaazon slide), not usually connected
 class CFSample(Device):
     z = Cpt(EpicsMotor, 'Z}Mtr', labels=('FP ES:1',))
 
@@ -81,14 +80,14 @@ pbslits = PBSlits('XF:17BMA-OP{Slt:PB-Ax:', name='pbslits')
 
 #Real and virtual XFP ADC Slit axes in a single class.
 class ADCSlits(Device):
-    top = Cpt(EpicsMotor, 'T}Mtr', labels=('FP ES:2',))
-    bot = Cpt(EpicsMotor, 'B}Mtr', labels=('FP ES:2',))
-    inb = Cpt(EpicsMotor, 'I}Mtr', labels=('FP ES:2',))
-    outb = Cpt(EpicsMotor, 'O}Mtr', labels=('FP ES:2',))
-    xgap = Cpt(EpicsMotor, 'XGap}Mtr', labels=('FP ES:2',))
-    xctr = Cpt(EpicsMotor, 'XCtr}Mtr', labels=('FP ES:2',))
-    ygap = Cpt(EpicsMotor, 'YGap}Mtr', labels=('FP ES:2',))
-    yctr = Cpt(EpicsMotor, 'YCtr}Mtr', labels=('FP ES:2',))
+    top = Cpt(EpicsMotor, 'T}Mtr', labels=('FP ES:2','monochromatic ES',))
+    bot = Cpt(EpicsMotor, 'B}Mtr', labels=('FP ES:2','monochromatic ES',))
+    inb = Cpt(EpicsMotor, 'I}Mtr', labels=('FP ES:2','monochromatic ES',))
+    outb = Cpt(EpicsMotor, 'O}Mtr', labels=('FP ES:2','monochromatic ES',))
+    xgap = Cpt(EpicsMotor, 'XGap}Mtr', labels=('FP ES:2','monochromatic ES',))
+    xctr = Cpt(EpicsMotor, 'XCtr}Mtr', labels=('FP ES:2','monochromatic ES',))
+    ygap = Cpt(EpicsMotor, 'YGap}Mtr', labels=('FP ES:2','monochromatic ES',))
+    yctr = Cpt(EpicsMotor, 'YCtr}Mtr', labels=('FP ES:2','monochromatic ES',))
 
 adcslits = ADCSlits('XF:17BMA-OP{Slt:ADC-Ax:', name='adcslits')
 

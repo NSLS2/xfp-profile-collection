@@ -36,8 +36,8 @@ class XFP_FE_Mirror(Device):
     pitch = Cpt(EpicsMotor, '-Ax:P}Mtr', labels=('FE Mirror',))
     yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr', labels=('FE Mirror',))
     roll = Cpt(EpicsMotor, '-Ax:R}Mtr', labels=('FE Mirror',))
-    temp1 = Cpt(EpicsSignalRO, '}T:1-I')
-    temp2 = Cpt(EpicsSignalRO, '}T:2-I')
+    temp1 = Cpt(EpicsSignalRO, '}T:1-I', labels=('FE Mirror',))
+    temp2 = Cpt(EpicsSignalRO, '}T:2-I', labels=('FE Mirror',))
 
 xfp_fe_mirror = XFP_FE_Mirror('XF:17BM-OP{Mir:1', name='xfp_fe_mirror')
 
