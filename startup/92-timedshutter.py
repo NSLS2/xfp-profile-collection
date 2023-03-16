@@ -99,6 +99,61 @@ def timed_shutter(exp_time, *, md=None):
     yield from bpp.finalize_wrapper(inner_plan(), clean_up())
 
 #TODO: fix up functions below to capture into databroker.
+
+#Functions to actuate BIFS sample shutter
+
+def timed_sam_shutter(ss_exp_time):
+    '''Opens the sample shutter for a defined exposure time.
+    Prerequisites: FE photon shutter and pre-shutter are open
+
+    Parameter
+    ---------
+    ss_exp_time: float
+        Exposure time in seconds
+    '''
+    yield from bps.mv(diode_shutter, 'Open')
+    print(f"Opening DIODE sample shutter for a {ss_exp_time} second(s) exposure.")
+    yield from bps.sleep(ss_exp_time)
+    yield from bps.mv(diode_shutter, 'Close')
+    print(f"Closed DIODE sample shutter.")
+
+def timed_sam_shutter_fe(ss_exp_time):
+    '''Opens the FE photon shutter, then the sample shutter for a defined time.
+    Prerequisites: pre-shutter is open.
+    
+    Parameter
+    ---------
+    ss_exp_time: float
+        Exposure time in seconds
+    '''
+    #check state of FE shutter, raise exception if it is not enabled.
+    if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        raise Exception("Can't open FE shutter! Check that the hutch is interlocked and the shutter is enabled.")
+    
+    #Open FE shutter, actuate sample shutter, then close FE shutter
+    yield from bps.abs_set(pps_shutter, 'Open', wait=True)
+    print('FE shutter opened.')
+    yield from bps.sleep(1)
+    yield from time_sam_shutter(ss_exp_time)
+    yield from bps.sleep(1)
+    yield from bps.ab_set(pps_shutter, 'Close', wait=True)
+    print('Closed FE shutter.')
+
+def timed_sam_shutter_pre(ss_exp_time):
+    '''Opens the pre-shutter, then sample shutter for a defined exposure time.
+    Prerequisites: FE photon shutter is open
+
+    Parameter
+    ---------
+    ss_exp_time: float
+        Exposure time in seconds
+    '''
+    yield from bps.mv(shutter, 'Open')
+    print("Opened pre-shutter.")
+    yield from timed_sam_shutter(ss_exp_time)
+    yield from bps.mv(shutter, 'Close')
+    print("Closed pre-shutter.")
+
 #Functions to actuate Uniblitz fast shutter
 
 def timed_uniblitz(fire_time):
@@ -155,35 +210,3 @@ def timed_uniblitz_ss(fire_time):
         yield from bps.sleep(0.5)
     yield from bps.mv(diode_shutter, 'Close')
     print("Closed DIODE sample shutter.")
-
-#Functions to actuate sample shutter in BIFS
-
-def timed_sam_shutter(ss_exp_time):
-    '''Opens the sample shutter for a defined exposure time.
-    Prerequisites: FE photon shutter and pre-shutter are open
-
-    Parameter
-    ---------
-    ss_exp_time_time: float
-        Exposure time in seconds
-    '''
-    yield from bps.mv(diode_shutter, 'Open')
-    print("Opened DIODE sample shutter.")
-    yield from bps.sleep(ss_exp_time)
-    yield from bps.mv(diode_shutter, 'Close')
-    print(f"Closed DIODE sample shutter after a {ss_exp_time} second(s) exposure.")
-
-def timed_sam_shutter_pre(ss_exp_time):
-    '''Opens the pre-shutter, then sample shutter for a defined exposure time.
-    Prerequisites: FE photon shutter is open
-
-    Parameter
-    ---------
-    ss_exp_time_time: float
-        Exposure time in seconds
-    '''
-    yield from bps.mv(shutter, 'Open')
-    print("Opened pre-shutter.")
-    yield from timed_sam_shutter(ss_exp_time)
-    yield from bps.mv(shutter, 'Close')
-    print("Closed pre-shutter.")
