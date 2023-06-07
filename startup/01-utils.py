@@ -21,14 +21,15 @@ def set_user_md():
     print(f"Set the PI to {pi_name} and lead experimenter to {user_name}.")
 
 def clear_user_md():
-    '''Clear user metadata, e.g. for commissioning with no proposal number'''
+    '''Clear user metadata and set to setup/commissioning values'''
+    #Current proposal/SAF valid for CY2023
     inp_choice = input("Are you sure you want to clear metadata (y/n)? ")
     if inp_choice=='y' or inp_choice=='yes':
-        del RE.md['proposal']
-        del RE.md['SAF']
-        del RE.md['PI']
-        del RE.md['experimenter']
-        print("Cleared metadata keys for proposal, SAF, PI, and experimenter")
+        RE.md['proposal'] = '311955'
+        RE.md['SAF'] = '310464'
+        RE.md['PI'] = 'Farquhar'
+        RE.md['experimenter'] = 'Farquhar'
+        print("Reset metadata keys to commissioning proposal.")
     else:
         print("\nNo change made! Current persistant metadata is:")
         print(RE.md)
