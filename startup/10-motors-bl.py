@@ -45,13 +45,6 @@ class HTFly(Device):
 
 htfly = HT('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
 
-#Sydor BPM motors and readback in 20-bpm.py
-#class BPM(Device):
-#    x = Cpt(EpicsMotor, 'X}Mtr')
-#    y = Cpt(EpicsMotor, 'Y}Mtr')
-#
-#bpm1 = BPM('XF:17BMA-OP{Bpm:1-Ax:', name='bpm1')
-
 #Amazon 50mm-100mm slides, not usually connected
 class CVDViewer(Device):
     x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP ES:1',))
