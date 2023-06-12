@@ -35,7 +35,7 @@ class ColumnWidget:
         self._position = j
         self.data = data
 
-        self.cb = QtWidgets.QGroupBox(f'Slot: {j}')
+        self.cb = QtWidgets.QGroupBox(f'Pos: {j}')
         self.cb.setCheckable(True)
 
         self.sb = QtWidgets.QDoubleSpinBox()
@@ -119,7 +119,7 @@ class ColumnWidget:
 
     def update_slot(self):
         if self.data is not None:
-            self.label_text = f"Slot: {self.data['location']} / {self.data['slot']}"
+            self.label_text = f"Pos: {self.data['location']} / {self.data['slot']}"
             self.cb.setTitle(self.label_text)
             self.le.setText(str(self.data['name']))
             self.notes.setText(str(self.data['notes']))
@@ -242,7 +242,7 @@ class DirectorySelector:
         f_layout = QtWidgets.QFormLayout()
         f_layout.addRow(button, None)
         f_layout.addRow(hlayout)
-        f_layout.addRow('File template:', short_desc)
+        f_layout.addRow('File name:', short_desc)
         # f_layout.addRow('overall notes', notes)
 
         widget.setLayout(f_layout)
@@ -437,7 +437,7 @@ class RunEngineControls:
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
         self.label.setText(state)
 
-        self.info_label.setText(f'Motors positions:\n\n{motors_positions(self.motors)}')
+        self.info_label.setText(f'HT motor positions:\n\n{motors_positions(self.motors)}')
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
         self.button_pause.setEnabled(button_pause_enabled)
@@ -450,7 +450,7 @@ class XFPSampleSelector:
         self.filter_obj = filter_obj
 
         self.window = window = QtWidgets.QMainWindow()
-        window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
+        window.setWindowTitle('XFP High-Throughput Device')
 
         self._slot_index = slot_index
         self._rows = rows
@@ -503,7 +503,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.re_controls.widget)
 
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Sample shutter per sample?')
+        self.checkbox_shutter = QtWidgets.QCheckBox('Sample shutter for each sample?')
         self.checkbox_shutter.setChecked(False)
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
