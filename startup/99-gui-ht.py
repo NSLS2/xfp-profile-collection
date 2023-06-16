@@ -299,7 +299,7 @@ class FileSelector:
 
         hlayout.addWidget(self.label)
         # hlayout.addStretch()
-        self.button_name = 'Select Excel file'
+        self.button_name = 'Select Excel plan'
         button = QtWidgets.QPushButton(self.button_name)
         button.setIcon(QtGui.QIcon.fromTheme('file'))
         button.clicked.connect(self.select_file)
@@ -494,8 +494,8 @@ class XFPSampleSelector:
         self.controls_layout = controls_layout = QtWidgets.QVBoxLayout()
 
         # Import Excel file controls:
-        self.import_file = import_file = FileSelector('Import Excel file', ext_widget=self, filter_obj=self.filter_obj)
-        self.path_select = path = DirectorySelector('Export CSV file after run')
+        self.import_file = import_file = FileSelector('Import Excel plan file', ext_widget=self, filter_obj=self.filter_obj)
+        self.path_select = path = DirectorySelector('Export CSV metadata after run')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
         controls_layout.addWidget(self.import_file.widget)
@@ -503,7 +503,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.re_controls.widget)
 
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Sample shutter for each sample?')
+        self.checkbox_shutter = QtWidgets.QCheckBox('Actuate sample shutter on each sample?')
         self.checkbox_shutter.setChecked(False)
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
@@ -529,7 +529,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(button_load_pos)
 
         # Group of widgets for aligning of the holder:
-        self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align the holder:')
+        self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align HT stage:')
 
         self.align_layout = align_layout = QtWidgets.QVBoxLayout()
         self.align_controls_layout = align_controls_layout = QtWidgets.QHBoxLayout()
@@ -563,8 +563,8 @@ class XFPSampleSelector:
         self.aligning_x.setMaximum(97.5)
 
         self.aligning_y = aligning_y = QtWidgets.QDoubleSpinBox()
-        self.aligning_y.setMinimum(-99.5)
-        self.aligning_y.setMaximum(99.5)
+        self.aligning_y.setMinimum(-80.6)
+        self.aligning_y.setMaximum(98.5)
 
         self.align_reset()
 
