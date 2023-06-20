@@ -35,7 +35,7 @@ class ColumnWidget:
         self._position = j
         self.data = data
 
-        self.cb = QtWidgets.QGroupBox(f'Slot: {j}')
+        self.cb = QtWidgets.QGroupBox(f'Pos: {j}')
         self.cb.setCheckable(True)
 
         self.sb = QtWidgets.QDoubleSpinBox()
@@ -119,7 +119,7 @@ class ColumnWidget:
 
     def update_slot(self):
         if self.data is not None:
-            self.label_text = f"Slot: {self.data['location']} / {self.data['slot']}"
+            self.label_text = f"Pos: {self.data['location']} / {self.data['slot']}"
             self.cb.setTitle(self.label_text)
             self.le.setText(str(self.data['name']))
             self.notes.setText(str(self.data['notes']))
@@ -242,7 +242,7 @@ class DirectorySelector:
         f_layout = QtWidgets.QFormLayout()
         f_layout.addRow(button, None)
         f_layout.addRow(hlayout)
-        f_layout.addRow('File template:', short_desc)
+        f_layout.addRow('File name:', short_desc)
         # f_layout.addRow('overall notes', notes)
 
         widget.setLayout(f_layout)
@@ -299,7 +299,7 @@ class FileSelector:
 
         hlayout.addWidget(self.label)
         # hlayout.addStretch()
-        self.button_name = 'Select Excel file'
+        self.button_name = 'Select Excel plan'
         button = QtWidgets.QPushButton(self.button_name)
         button.setIcon(QtGui.QIcon.fromTheme('file'))
         button.clicked.connect(self.select_file)
@@ -437,7 +437,7 @@ class RunEngineControls:
         self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
         self.label.setText(state)
 
-        self.info_label.setText(f'Motors positions:\n\n{motors_positions(self.motors)}')
+        self.info_label.setText(f'HT motor positions:\n\n{motors_positions(self.motors)}')
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
         self.button_pause.setEnabled(button_pause_enabled)
@@ -450,7 +450,7 @@ class XFPSampleSelector:
         self.filter_obj = filter_obj
 
         self.window = window = QtWidgets.QMainWindow()
-        window.setWindowTitle('XFP High-Throughput Multi-Sample Holder')
+        window.setWindowTitle('XFP High-Throughput Device')
 
         self._slot_index = slot_index
         self._rows = rows
@@ -494,8 +494,8 @@ class XFPSampleSelector:
         self.controls_layout = controls_layout = QtWidgets.QVBoxLayout()
 
         # Import Excel file controls:
-        self.import_file = import_file = FileSelector('Import Excel file', ext_widget=self, filter_obj=self.filter_obj)
-        self.path_select = path = DirectorySelector('Export CSV file after run')
+        self.import_file = import_file = FileSelector('Import Excel plan file', ext_widget=self, filter_obj=self.filter_obj)
+        self.path_select = path = DirectorySelector('Export CSV metadata after run')
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
 
         controls_layout.addWidget(self.import_file.widget)
@@ -503,7 +503,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(self.re_controls.widget)
 
         # Checkbox to enable/disable the protective shutter per each slot or per whole run
-        self.checkbox_shutter = QtWidgets.QCheckBox('Sample shutter per sample?')
+        self.checkbox_shutter = QtWidgets.QCheckBox('Actuate sample shutter on each sample?')
         self.checkbox_shutter.setChecked(False)
         self.checkbox_shutter.setCheckable(True)
         controls_layout.addWidget(self.checkbox_shutter)
@@ -529,7 +529,7 @@ class XFPSampleSelector:
         controls_layout.addWidget(button_load_pos)
 
         # Group of widgets for aligning of the holder:
-        self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align the holder:')
+        self.aligning_group = aligning_group = QtWidgets.QGroupBox('Align HT stage:')
 
         self.align_layout = align_layout = QtWidgets.QVBoxLayout()
         self.align_controls_layout = align_controls_layout = QtWidgets.QHBoxLayout()
@@ -563,8 +563,8 @@ class XFPSampleSelector:
         self.aligning_x.setMaximum(97.5)
 
         self.aligning_y = aligning_y = QtWidgets.QDoubleSpinBox()
-        self.aligning_y.setMinimum(-99.5)
-        self.aligning_y.setMaximum(99.5)
+        self.aligning_y.setMinimum(-80.6)
+        self.aligning_y.setMaximum(98.5)
 
         self.align_reset()
 

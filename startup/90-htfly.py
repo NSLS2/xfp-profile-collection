@@ -91,27 +91,6 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         else:
             print(f"moving to row {row_num} at htfly_y = {htfly_row_vert[row_num-1]}")
             yield from bps.mv(htfly.y, htfly_row_vert[row_num-1])
-        
-        #if row_num == 1:
-        #    print(f"moving to row 1 at htfly_y = {row3_y_vert-18}")
-        #    yield from bps.mv(htfly.y, row3_y_vert-18)
-        #elif row_num == 2:
-        #    print(f"moving to row 2 at htfly_y = {row3_y_vert-9}")
-        #    yield from bps.mv(htfly.y, row3_y_vert-9)
-        #elif row_num == 3:
-        #    print(f"moving to row 3 at htfly_y = {row3_y_vert}")
-        #    yield from bps.mv(htfly.y, row3_y_vert)
-        #elif row_num == 4:
-        #    print(f"moving to row 4 at htfly_y = {row3_y_vert+9}")
-        #    yield from bps.mv(htfly.y, row3_y_vert+9)
-        #elif row_num == 5:
-        #    print(f"moving to row 5 at htfly_y = {row3_y_vert+18}")
-        #    yield from bps.mv(htfly.y, row3_y_vert+18)
-        #elif row_num == 6:
-        #    print(f"moving to row 6 at htfly_y = {row3_y_vert+27}")
-        #    yield from bps.mv(htfly.y, row3_y_vert+27)
-        #else:
-        #    raise ValueError(f"You entered row {row_num}. Row value must be in the range 1 - 6!")
     
         #Check the attenuator thickness is in the filter wheel list dictionary.
         if not any(d['thickness'] == al_thickness for d in filter_wheel.wheel_positions):
