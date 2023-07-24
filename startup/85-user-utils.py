@@ -68,15 +68,15 @@ def choose_atten(atten_thick, *, md=None):
     '''
 
     atten_dict = {"0mm": 90.0,
-                  "1mm": 80.0,
-                  "2mm": 70.0,
-                  "3mm": 60.0,
-                  "4mm": 50.0,
+                  "1mm": 0.0,
+                  "2mm": 10.0,
+                  "3mm": 20.0,
+                  "4mm": 30.0,
                   "5mm": 40.0,
-                  "6mm": 30.0,
-                  "7mm": 20.0,
-                  "8mm": 10.0,
-                  "9mm": 0.0}   
+                  "6mm": 50.0,
+                  "7mm": 60.0,
+                  "8mm": 70.0,
+                  "9mm": 80.0}   
     
     _md = {'plan_name': 'choose_attenuator',
            'attenuator_thickness': atten_thick}
