@@ -17,10 +17,10 @@ def choose_pinhole(pinhole, *, md=None):
     
     '''
 
-    pinhole_dict = {"2mm": [-1, -13],
-                    "1.5mm": [-1, -3],
-                    "1mm": [-1, 7],
-                    "100um": [11, -3]}   
+    pinhole_dict = {"2mm": [-1.2, -13.2],
+                    "1.5mm": [-1.1, -3.4],
+                    "1mm": [-1.1, 6.6],
+                    "100um": [10.9, -3.6]}   
     
     _md = {'plan_name': 'choose_pinhole',
            'pinhole_size': pinhole}
@@ -49,3 +49,58 @@ def choose_pinhole(pinhole, *, md=None):
             print(f"You entered {pinhole}. You must choose one of: {pinhole_keys}")
         
     return (yield from inner_plan())
+
+def choose_atten(atten_thick, *, md=None):
+    '''
+    Function to select attenuator using cfsam_z stage.
+    Currently 0 - 9mm Al attenuators (in 1mm steps) are available.
+    Stage positions are listed internally in the function.
+
+    Parameters
+    ----------
+    atten_thick: string
+        Attenuator to use.
+        Must be one of '0mm', '1mm' ... '9mm'
+    
+    md: optional user specified metadata
+        By default, the attenuator thickness is written as metadata.
+    
+    '''
+
+    atten_dict = {"0mm": 90.0,
+                  "1mm": 80.0,
+                  "2mm": 70.0,
+                  "3mm": 60.0,
+                  "4mm": 50.0,
+                  "5mm": 40.0,
+                  "6mm": 30.0,
+                  "7mm": 20.0,
+                  "8mm": 10.0,
+                  "9mm": 0.0}   
+    
+    _md = {'plan_name': 'choose_attenuator',
+           'attenuator_thickness': atten_thick}
+    _md.update(md or {})
+
+    @bpp.run_decorator(md=_md)
+    def inner_plan():
+        if atten_thick in atten_dict:
+            atten_x = atten_dict[atten_thick]
+                    
+            cfsam_z_pos_orig = round(cfsam.z.user_readback.value, 3)
+        
+            print(f"Currently at cfsam_z = {cfsam_z_pos_orig}.")
+            print(f"Moving to cfsam_z = {atten_x}.")
+            yield from bps.mv(cfsam.z, atten_x)
+
+            cfsam_z_pos_new = round(cfsam.z.user_readback.value, 3)
+        
+            print(f"Now at cfsam_z = {cfsam_z_pos_new} for the {atten_thick} Al attenuator.")
+        
+        else:
+            atten_keys = ", ".join(atten_dict.keys())
+            print(f"You entered {atten_thick}. You must choose one of: {atten_keys}")
+        
+    return (yield from inner_plan())    
+    
+
