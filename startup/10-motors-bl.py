@@ -118,8 +118,8 @@ class PreMonoSlits(Device):
 
 premono_slits = PreMonoSlits('XF:17BMA-OP{Slt:PB-Ax:', name='premono_slits')
 
-#ES:3 vertical lift table
+#ES:3 vertical lift table (new virtual motor 8/2/23)
 class Table3(Device):
-    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('monochromatic ES',))
+    y = Cpt(EpicsMotor, 'Ye}Mtr', labels=('monochromatic ES',))
 
 tbl3 = Table3('XF:17BMA-ES:3{Tbl:3-Ax:', name='tbl3')
