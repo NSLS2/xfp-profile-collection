@@ -1,0 +1,19 @@
+#Position lookup table for attenuator
+attenuator_positions:
+ 0mm: 90.0
+ 1mm: 0.0
+ 2mm: 10.0
+ 3mm: 20.0
+ 4mm: 30.0
+ 5mm: 40.0
+ 6mm: 50.0
+ 7mm: 60.0
+ 8mm: 70.0
+ 9mm: 80.0
+
+#Position lookup for pinholes in [X, Y] format.
+pinhole_dict:
+ "2mm": [-7.8, -14.5]
+ "1.5mm": [-7.8, -4.7]
+ "1mm": [-7.7, 5.4]
+ "100um": [5.0, -4.4]

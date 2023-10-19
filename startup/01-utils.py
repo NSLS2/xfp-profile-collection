@@ -4,6 +4,7 @@ def start_bec():
     RE.subscribe(bec)
     print("BestEffortCallback enabled!")
 
+#Define metadata for user, proposal, and SAF
 def set_user_md():
     '''
     Function to define user / experiment values as persistant metadata
@@ -33,3 +34,13 @@ def clear_user_md():
     else:
         print("\nNo change made! Current persistant metadata is:")
         print(RE.md)
+
+#yaml config file read-in function
+import yaml
+def load_posconfig(file_path):
+    with open(file_path, 'r') as config_file:
+        pos_config = yaml.safe_load(config_file)
+    return pos_config
+
+pos_config_file_path = 'position_lookup.yaml'
+pos_config = load_posconfig(pos_config_file_path)
