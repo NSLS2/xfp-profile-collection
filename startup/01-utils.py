@@ -37,10 +37,10 @@ def clear_user_md():
 
 #yaml config file read-in function
 import yaml
-def load_posconfig(file_path):
+def load_mtrpos_config(file_path):
     with open(file_path, 'r') as config_file:
         pos_config = yaml.safe_load(config_file)
     return pos_config
 
-pos_config_file_path = 'position_lookup.yaml'
-pos_config = load_posconfig(pos_config_file_path)
+MTR_POS_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'position_lookup.yaml')
+mtr_pos_config = load_mtrpos_config(MTR_POS_CONFIG_FILE_PATH)

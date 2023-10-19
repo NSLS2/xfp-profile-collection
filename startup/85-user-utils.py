@@ -1,8 +1,8 @@
 #Various useful funcs for non-std users
 
 #read in from yaml file (def'd in 01-utils.py)
-PINHOLE_DICT = pos_config.get('pinhole_dict', {})
-ATTEN_DICT = pos_config.get('attenuator_positions', {})
+PINHOLE_DICT = mtr_pos_config.get('pinhole_dict', {})
+ATTEN_DICT = mtr_pos_config.get('attenuator_positions', {})
 
 def choose_pinhole(pinhole, *, md=None):
     '''
