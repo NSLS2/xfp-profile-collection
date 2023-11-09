@@ -36,7 +36,6 @@ def clear_user_md():
         print(RE.md)
 
 #yaml config file read-in function
-import yaml
 def load_mtrpos_config(file_path):
     with open(file_path, 'r') as config_file:
         pos_config = yaml.safe_load(config_file)
@@ -44,3 +43,21 @@ def load_mtrpos_config(file_path):
 
 MTR_POS_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'position_lookup.yaml')
 mtr_pos_config = load_mtrpos_config(MTR_POS_CONFIG_FILE_PATH)
+
+#print out a short statement of user metadata during bluesky startup
+user_persistant_dict_data = RE.md
+print("\nNOTE: Current user metadata values are")
+for key, value in user_persistant_dict_data.items():
+    print(f'{key}: {value}')
+print("\nUse set_user_md() or clear_user_md() to change user info.")
+print("Loading the rest of the startup profile.")
+
+def check_user_md():
+    '''Check user metadata dynamically'''
+    user_persistant_dict_check = RE.md
+    print("Current persistant user metadata values:")
+    for key, value in user_persistant_dict_check.items():
+        if key != 'scan_id':
+            print(f'{key}: {value}')
+
+

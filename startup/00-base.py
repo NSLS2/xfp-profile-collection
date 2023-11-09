@@ -10,6 +10,7 @@ import matplotlib.backends.backend_qt5
 import matplotlib.pyplot as plt
 import nslsii
 import pandas as pd
+import yaml
 from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.utils import PersistentDict
 from matplotlib._pylab_helpers import Gcf
