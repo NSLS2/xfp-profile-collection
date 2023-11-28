@@ -13,7 +13,7 @@ attenuator_positions:
 
 #Position lookup for pinholes in [X, Y] format.
 pinhole_dict:
- "2mm": [-7.8, -14.5]
- "1.5mm": [-7.8, -4.7]
- "1mm": [-7.7, 5.4]
- "100um": [5.0, -4.4]
+ "2mm": [-8.2, -14.5]
+ "1.5mm": [-8.0, -4.5]
+ "1mm": [-8.2, 5.3]
+ "100um": [4.7, -4.4]
