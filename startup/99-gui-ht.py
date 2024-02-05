@@ -172,7 +172,7 @@ class ColumnWidget:
         else:
             self.color = color
         width = self.width
-        return self.indicator.setStyleSheet(f'''QPushButton {{
+        self.indicator.setStyleSheet(f'''QPushButton {{
                 background-color: {color};
                 color: red;
                 border-style: solid;
@@ -185,6 +185,7 @@ class ColumnWidget:
                 min-height: {width}px;
                 font-size: 36px;
             }}''')
+        self.indicator.update()
 
     def state_changed(self):
         if self.cb.isChecked():
