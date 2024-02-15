@@ -1,14 +1,13 @@
-import copy
 import os.path
 import warnings
-
-import matplotlib.pyplot as plt
-from locate_slot import LetterNumberLocator
-
 # plt.ion()
 # from bluesky.utils import install_qt_kicker
 # install_qt_kicker()
-from matplotlib.backends.qt_compat import QtCore, QtGui, QtWidgets
+from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+import matplotlib.pyplot as plt
+from locate_slot import LetterNumberLocator
+import copy
+
 
 COLOR_SUCCESS = 'green'
 COLOR_RUNNING = 'red'
