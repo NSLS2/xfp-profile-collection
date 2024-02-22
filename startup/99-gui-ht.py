@@ -444,7 +444,13 @@ class RunEngineControls:
         self.button_pause.setText(button_pause_text)
 
 
+class ColorChangeSignal(QtCore.QObject):
+    signal = QtCore.Signal(int, str)
+
+
 class XFPSampleSelector:
+    
+
     def __init__(self, h_pos, v_pos, *, slot_index=(2, 0), rows=12, cols=8, load_pos_x=LOAD_POS_X, load_pos_y=LOAD_POS_Y, filter_obj=None):
 
         self.filter_obj = filter_obj
@@ -596,6 +602,12 @@ class XFPSampleSelector:
         self.h_pos = h_pos
         self.v_pos = v_pos
 
+        self.color_change_signal = ColorChangeSignal()
+        self.color_change_signal.signal.connect(self.change_slot_color)
+
+    def change_slot_color(self, position, color):
+        self.slots[position].change_color(color)
+
     def move_to_load_position(self):
         RE(bps.mv(ht.x, self.load_pos_x, ht.y, self.load_pos_y))  # load position
 
@@ -665,9 +677,9 @@ class XFPSampleSelector:
             column.indicator.setEnabled(True)
 
     def reset_colors(self):
-        for slot in self.slots:
+        for i, slot in enumerate(self.slots):
             if slot.cb.isChecked():
-                slot.change_color(COLOR_SELECTED)
+                self.color_change_signal.signal.emit(i, COLOR_SELECTED)
 
     def switch_test_mode(self, state):
         mode.test_mode = state
@@ -764,7 +776,7 @@ class XFPSampleSelector:
 
                 xfp_print(f"Info: {d}")
                 xfp_print(f"Slot #{gui_d['position']}: X={self.h_pos[gui_d['position']]}  Y={self.v_pos[gui_d['position']]}")
-                self.slots[gui_d['position']].change_color(COLOR_RUNNING)
+                self.color_change_signal.signal.emit(gui_d['position'], COLOR_RUNNING)
 
                 yield from bps.abs_set(ht.x, self.h_pos[gui_d['position']],
                                        group='ht')
@@ -794,8 +806,7 @@ class XFPSampleSelector:
 
                 uid = (yield from xfp_plan_fast_shutter(d,
                                                         shutter_per_slot=self.checkbox_shutter.isChecked()))
-
-                self.slots[gui_d['position']].change_color(COLOR_SUCCESS)
+                self.color_change_signal.signal.emit(gui_d['position'], COLOR_SUCCESS)
 
                 xfp_print(f'UID from xfp_plan_fast_shutter(): {uid}')
                 if uid is not None:
