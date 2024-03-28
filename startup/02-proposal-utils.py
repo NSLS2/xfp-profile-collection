@@ -107,3 +107,30 @@ def set_user_md_api():
     RE.md['experimenter'] = user_name
     print(f"\nSet proposal number to {proposal_num} and SAF number to {saf_num}.")
     print(f"Set the PI to {pi_name} and lead experimenter to {user_name}.")
+
+def api_proposal_report(proposal_num):
+    '''
+    Retrieve proposal info from NSLS-II API and produce a clean report.
+    Takes a single proposal ID as input.
+    '''
+    single_prop = get_proposal_info(proposal_num)
+    print("\nNSLS-II API data for proposal #:", single_prop['proposal_id'])
+    print("Proposal Type:", single_prop['type'])
+    print("Proposal Title:", single_prop['title'])
+    approved_saf_ids = [saf['saf_id'] for saf in single_prop['safs'] if saf['status'] == 'APPROVED']
+    print("Beamlines:", single_prop['instruments'])
+    print("Cycles:", single_prop['cycles'])
+    print("Approved SAFs:", ", ".join(approved_saf_ids))
+    sorted_users = sorted(single_prop['users'], key=lambda x: x['last_name'])
+    pi_users = [user for user in single_prop['users'] if user['is_pi']]
+    for i, user in enumerate(pi_users):
+        print(f"Proposal PI: {user['first_name']} {user['last_name']}", end="")
+        if i < len(pi_users) - 1:
+            print(",", end=" ")
+    print(" ")
+    print("Proposal Members:")
+    for i, user in enumerate(sorted_users):
+        print(f"\nName: {user['first_name']} {user['last_name']}; ID: ({user['username']} / {user['bnl_id']}); e-mail: {user['email']}", end="")
+        if i < len(sorted_users) - 1:
+            print(",", end=" ")
+    print(" ")
