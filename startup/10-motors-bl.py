@@ -47,14 +47,14 @@ htfly = HT('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
 
 #Amazon 50mm-100mm slides, not usually connected
 class CVDViewer(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP ES:1',))
-    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('FP ES:1',))
+    x = Cpt(EpicsMotor, 'X}Mtr', labels=('greenfield ES:2',))
+    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('greenfield ES:2',))
 
 cvd = CVDViewer('XF:17BMA-ES:1{CVD:1-Ax:', name='cvd')
 
 #CF sample collector (Amaazon slide), not usually connected
 class CFSample(Device):
-    z = Cpt(EpicsMotor, 'Z}Mtr', labels=('FP ES:1',))
+    z = Cpt(EpicsMotor, 'Z}Mtr', labels=('greenfield ES:2',))
 
 cfsam = CFSample('XF:17BMA-ES:1{Sam:1-Ax:', name='cfsam')
 
@@ -123,3 +123,16 @@ class Table3(Device):
     y = Cpt(EpicsMotor, 'Ye}Mtr', labels=('monochromatic ES',))
 
 tbl3 = Table3('XF:17BMA-ES:3{Tbl:3-Ax:', name='tbl3')
+
+#Galil1 mod12 and mod34 xy stages. Only conencted for greenfield expts.
+class Mod12(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr', labels='greenfield ES:2')
+    y = Cpt(EpicsMotor, 'Y}Mtr', labels='greenfield ES:2')
+
+mod12 = Mod12('XF:17BMA-ES:2{Mod:12-Ax:', name='mod12')
+
+class Mod34(Device):
+    x = Cpt(EpicsMotor, 'X}Mtr', labels='greenfield ES:2')
+    y = Cpt(EpicsMotor, 'Y}Mtr', labels='greenfield ES:2')
+
+mod34 = Mod34('XF:17BMA-ES:2{Mod:34-Ax:', name='mod34')
