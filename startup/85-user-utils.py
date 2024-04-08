@@ -3,6 +3,7 @@
 #read in from yaml file (def'd in 01-utils.py)
 PINHOLE_DICT = mtr_pos_config.get('pinhole_dict', {})
 ATTEN_DICT = mtr_pos_config.get('attenuator_positions', {})
+MICRO_PINHOLE_DICT = mtr_pos_config.get('micropinhole_dict', {})
 
 def choose_pinhole(pinhole, *, md=None):
     '''
@@ -91,4 +92,53 @@ def choose_atten(atten_thick, *, md=None):
         
     return (yield from inner_plan())    
     
+def position_micro_pinhole(position, *, md=None):
+    '''
+    Function to position micro-pinhole mounted on mod34_x/y stages.
+    Choose from in or out as positions
+    Stage positions are listed in position_lookup.yaml.
 
+    Parameters
+    ----------
+    position: string
+        Position of micropinhole.
+        Must be either 'in' or 'out'
+    
+    md: optional user specified metadata
+        By default, the pinhole size is written as metadata for each successful run.
+    
+    '''
+ 
+    _md = {'plan_name': 'position_micro_pinhole',
+           'micro_pinhole_pos': position}
+    _md.update(md or {})
+
+    @bpp.run_decorator(md=_md)
+    def inner_plan():
+        if position in MICRO_PINHOLE_DICT:
+            pinhole_x = MICRO_PINHOLE_DICT[position][0]
+            pinhole_y = MICRO_PINHOLE_DICT[position][1]
+        
+            mod34_x_pos_orig = round(mod34.x.user_readback.value, 3)
+            mod34_y_pos_orig = round(mod34.y.user_readback.value, 3)
+        
+            print(f"Currently at mod34_x = {mod34_x_pos_orig} and mod34_y = {mod34_y_pos_orig}.")
+            if position == 'in':
+                print(f"Moving micro-pinhole in, to mod34_x = {pinhole_x} and mod34_y = {pinhole_y}.")
+                yield from bps.mv(mod34.y, pinhole_y, mod34.x, pinhole_x)
+                mod34_x_pos_new = round(mod34.x.user_readback.value, 3)
+                mod34_y_pos_new = round(mod34.y.user_readback.value, 3)
+                print(f"Inserted micro-pinhole. Now at mod34_x = {mod34_x_pos_new} and mod34_y = {mod34_y_pos_new}.")
+
+            if position == 'out':
+                print(f"Moving micro-pinhole out, to mod34_x = {pinhole_x} and mod34_y = {pinhole_y}.")
+                yield from bps.mv(mod34.y, pinhole_y, mod34.x, pinhole_x)
+                mod34_x_pos_new = round(mod34.x.user_readback.value, 3)
+                mod34_y_pos_new = round(mod34.y.user_readback.value, 3)
+                print(f"Removed micro-pinhole. Now at mod34_x = {mod34_x_pos_new} and mod34_y = {mod34_y_pos_new}.")
+       
+        else:
+            pinhole_keys = ", ".join(MICRO_PINHOLE_DICT.keys())
+            print(f"You entered {position}. You must choose one of: {pinhole_keys}")
+        
+    return (yield from inner_plan())

@@ -17,3 +17,9 @@ pinhole_dict:
  "1.5mm": [-8.5, -4.75]
  "1mm": [-8.5, 5.3]
  "100um": [3.65, -4.8]
+
+#Position lookup for micro pinholes on mod34 stage
+micropinhole_dict:
+ "in": [25, 29.1]
+ "out": [45, 2]
+ 
