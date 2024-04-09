@@ -41,10 +41,6 @@ def load_yamlfile_config(file_path):
         pos_config = yaml.safe_load(config_file)
     return pos_config
 
-#read-in motor positons for pinhole + attenuator assembly
-MTR_POS_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'yaml-files/position_lookup.yaml')
-mtr_pos_config = load_yamlfile_config(MTR_POS_CONFIG_FILE_PATH)
-
 #print out a short statement of user metadata during bluesky startup
 user_persistant_dict_data = RE.md
 print("\nCurrent user metadata values are:")

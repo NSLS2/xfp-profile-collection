@@ -1,6 +1,10 @@
 #Various useful funcs for non-std users
 
-#read in from yaml file (def'd in 01-utils.py)
+#read-in yaml file motor positions
+MTR_POS_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'yaml-files/position_lookup.yaml')
+mtr_pos_config = load_yamlfile_config(MTR_POS_CONFIG_FILE_PATH)
+
+#read in specific dicts from yaml file
 PINHOLE_DICT = mtr_pos_config.get('pinhole_dict', {})
 ATTEN_DICT = mtr_pos_config.get('attenuator_positions', {})
 MICRO_PINHOLE_DICT = mtr_pos_config.get('micropinhole_dict', {})
