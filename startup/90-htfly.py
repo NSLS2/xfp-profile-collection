@@ -16,8 +16,7 @@ def htfly_move_to_load():
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
     else:
         print("Already there!")
-
-
+ 
 def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
     '''
     Function to expose a single row on the HTFly device, specifying velocity, 
@@ -83,9 +82,7 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
             yield from bps.mv(adcslits.xgap, hslit_size)
             
         #Move to desired row number, throw exception if row /= 1-6
-
         htfly_row_vert = [row3_y_vert - 18, row3_y_vert - 9, row3_y_vert, row3_y_vert + 9, row3_y_vert +18, row3_y_vert + 27]
-
         if (row_num < 1) or (row_num > 6):
             raise ValueError(f"You entered row {row_num}. Row value must be in the range 1 - 6!")
         else:
@@ -100,21 +97,22 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
             yield from bps.mv(filter_wheel.thickness, al_thickness)
 
         #Check that HTFly is at load position and move it there before opening shutters.
+        #This needs to be improved
         if htfly.x.position != LOAD_HTFLY_POS_X:
             print("Moving to load position.")
             yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
-    
+
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
         #If the pps_shutter is disabled, exit and inform the user.
         #This nomenclature allows the shutters to remain open after RE completes.
         if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
             raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
-    
+        
         if pps_shutter.status.get() == 'Not Open':
             print("The photon shutter was closed and is now being opened.")
             pps_shutter.set('Open')
             yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
-        
+            
         if pre_shutter.status.get() == 'Not Open':
             print("The pre-shutter was closed and is now being opened.")
             pre_shutter.set('Open')
@@ -129,7 +127,7 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
         #Open sample shutter and do the exposure.
         print("Pre-shutter and PPS shutter are open. Opening the sample shutter.")
   
-        yield from bps.mv(diode_shutter, 'open')
+        yield from bps.mv(diode_shutter, 'Open')
         #Comment out Uniblitz actuation.
         #yield from bps.mv(dg, 30)               #set Uniblitz opening time
         #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
@@ -140,10 +138,129 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
     
         #Cleanup: close shutters, return to load position.
         print("Closing sample shutter and returning to load position")
-        yield from bps.mv(diode_shutter, 'close')
+        yield from bps.mv(diode_shutter, 'Close')
         #yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
         yield from bps.sleep(1)
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
         print("All done, ready for another row!")
 
     return (yield from inner_htfly_exp())
+
+#read-in HTFly slit/velocity dict from yaml file
+HTFLY_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'yaml-files/htfly_lookup.yaml')
+htfly_exp_config = load_yamlfile_config(HTFLY_CONFIG_FILE_PATH)
+HTFLY_EXP_DICT = htfly_exp_config.get('htfly_exp_dict', {})
+
+#WIP, DO NOT USE
+def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
+    '''
+    Function to expose a single row on the HTFly device, specifying exposure time
+    and attenuation. Moves device back to load position after exposure.
+    Leaves FE shutter and pre-shutter open after run.
+
+    Parameters
+    ----------
+    row_num: integer
+        Row number on HTFly exposure cell. 
+        Must be in the range 1 - 6
+    
+    exp_time: string
+        exposure time specified as '<xx>ms' or '<xx>us'
+        acceptable values specified by htfly_exp_dict in htfly_lookup.yaml 
+
+    al_thickness: integer
+        Aluminum attenuator thickness in um.
+        Must be an entry in the list [762, 508, 305, 203, 152, 76, 25, 0]
+
+    md: optional user specified metadata
+        By default, the plan name, exposure time, row number, stage velocity, 
+        slit size, and attenuator are written as metadata for each successful run.
+     
+    '''
+   
+    _md = {'plan_name': 'htfly_time_row',
+           'row_number': row_num,
+           'exposure_time': exp_time,
+           'attenuator': al_thickness}
+    _md.update(md or {})
+
+    def htfly_exp_setup():
+        if exp_time in HTFLY_EXP_DICT:
+            htfly_vel = HTFLY_EXP_DICT[exp_time][1]
+            hslit_size = HTFLY_EXP_DICT[exp_time][0]
+        
+        else:
+            exptime_keys = ", ".join(HTFLY_EXP_DICT.keys())
+            raise ValueError(f"You entered {exp_time}. You must choose one of: {exptime_keys}")
+                
+        #configure stage velocity and adc slit xgap
+        print(f"Setting htfly_x stage velocity to {htfly_vel} mm/sec.")
+        yield from bps.mv(htfly.x.velocity, htfly_vel)
+        print(f"Moving the ADC horizontal slit size to {hslit_size} mm.")
+        #yield from bps.mv(adcslits.xgap, hslit_size)
+
+        #Move to desired row number, throw exception if row /= 1-6
+        htfly_row_vert = [row3_y_vert - 18, row3_y_vert - 9, row3_y_vert, row3_y_vert + 9, row3_y_vert +18, row3_y_vert + 27]
+        if (row_num < 1) or (row_num > 6):
+            raise ValueError(f"You entered row {row_num}. Row value must be in the range 1 - 6!")
+        else:
+            print(f"moving to row {row_num} at htfly_y = {htfly_row_vert[row_num-1]}")
+            #yield from bps.mv(htfly.y, htfly_row_vert[row_num-1])
+    
+        #Check the attenuator thickness is in the filter wheel list dictionary.
+        if not any(d['thickness'] == al_thickness for d in filter_wheel.wheel_positions):
+            raise ValueError(f"{al_thickness} is not an available attenuator. Choose from: 762, 508, 305, 203, 152, 76, 25, or 0")
+        else:
+            print(f"Moving filter wheel to {al_thickness} um Al attenuation.")
+            #yield from bps.mv(filter_wheel.thickness, al_thickness)
+
+        #Check that HTFly is at load position and move it there before opening shutters.
+        #This needs to be improved
+        if htfly.x.position != LOAD_HTFLY_POS_X:
+            print("Moving to load position.")
+            yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
+
+        #Check state of pps_shutter and pre_shutter and open if needed and enabled.
+        #If the pps_shutter is disabled, exit and inform the user.
+        #This nomenclature allows the shutters to remain open after RE completes.
+        #if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        #    raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+        
+        #if pps_shutter.status.get() == 'Not Open':
+        #    print("The photon shutter was closed and is now being opened.")
+        #    pps_shutter.set('Open')
+        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+            
+        #if pre_shutter.status.get() == 'Not Open':
+        #    print("The pre-shutter was closed and is now being opened.")
+        #    pre_shutter.set('Open')
+        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish   
+
+   
+    @bpp.run_decorator(md=_md)
+    def inner_htfly_exp():
+        
+        #Run the setup plan
+        yield from htfly_exp_setup()
+
+        #Open sample shutter and do the exposure.
+        print("Pre-shutter and PPS shutter are open. Opening the sample shutter.")
+  
+        yield from bps.mv(diode_shutter, 'Open')
+        #Comment out Uniblitz actuation.
+        #yield from bps.mv(dg, 30)               #set Uniblitz opening time
+        #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
+    
+        print(f"\nExposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.\n")
+        yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
+    
+        #Cleanup: close shutters, return to load position.
+        print("Closing sample shutter and returning to load position")
+        yield from bps.mv(diode_shutter, 'Close')
+        #yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
+        yield from bps.sleep(1)
+        yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
+        print("All done, ready for another row!")
+
+    return (yield from inner_htfly_exp())
+
