@@ -11,10 +11,9 @@ row3_y_vert = -2.8
 
 def htfly_move_to_load():
     if htfly.x.position != LOAD_HTFLY_POS_X:
-        print("Moving to load position")
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
     else:
-        print("Already there!")
+        pass
 
 def htfly_common_setup(row_num, al_thickness):
         '''
@@ -210,7 +209,7 @@ def htfly_exptime_row(row_num, exp_time, al_thickness, *, md=None):
                 
         #calculate exposure time from velocity and slit size (verifies selection)
         calc_htfly_exp_time = round((hslit_size / htfly_vel) * 1000, 3)
-        print(f"\nExposing row {row_num} for {calc_htfly_exp_time} ms using a slit size of {hslit_size} mm and velocity of {htfly_vel} mm/sec.")
+        print(f"\nPlan: Expose row {row_num} for {calc_htfly_exp_time} ms with {al_thickness} um Al (slit size = {hslit_size} mm, velocity = {htfly_vel} mm/sec.)")
         
         #configure stage velocity and adc slit xgap
         print(f"Setting htfly_x stage velocity to {htfly_vel} mm/sec.")
@@ -235,7 +234,7 @@ def htfly_exptime_row(row_num, exp_time, al_thickness, *, md=None):
         #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
 
         #Two distinct conditions
-        print(f"\nExposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.")
+        print(f"\nNow exposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.")
         if htfly.x.position == -285.0:
             yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
             yield from htfly_exp_cleanup()
@@ -258,8 +257,8 @@ def htfly_exp_plan():
         raise ValueError(f"You entered {num_rows}. This must be a value between 1 and 6")
     row_nums = list(map(int, input("Enter row numbers to expose, separated by commas: ").split(',')))
     exp_times = list(map(str, input("Enter exposure times per row, separated by commas and spaces: ").split(', ')))
-    al_thicknesses = list(map(float, input("Enter aluminum thicknesses per row, separated by commas: ").split(',')))
-    # Check if the number of inputs provided matches the specified number of rows
+    al_thicknesses = list(map(int, input("Enter aluminum thicknesses per row, separated by commas: ").split(',')))
+    # Check that inputs match the number of requested rows
     if len(row_nums) != num_rows or len(exp_times) != num_rows or len(al_thicknesses) != num_rows:
         raise ValueError("Number of inputs does not match the specified number of rows.")
     
@@ -268,7 +267,8 @@ def htfly_exp_plan():
         raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
     for row_num, exp_time, al_thickness in zip(row_nums, exp_times, al_thicknesses):
         yield from htfly_exptime_row(row_num, exp_time, al_thickness)
-    print(f"\nExposure set for {num_rows} rows completed, now closing the photon shutter.\n")
+    print(f"\nExposure set for {num_rows} row(s) completed, now closing the photon shutter and returning to load position.\n")
     pps_shutter.set('Close')
     yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+    yield from htfly_move_to_load()
     return
