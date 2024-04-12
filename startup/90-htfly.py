@@ -7,7 +7,7 @@ LOAD_HTFLY_POS_X = -285
 EXPOSED_HTFLY_POS_X = 285
 
 #Define vertical position of row 3
-row3_y_vert = -2.9
+row3_y_vert = -2.8
 
 def htfly_move_to_load():
     if htfly.x.position != LOAD_HTFLY_POS_X:
@@ -38,27 +38,35 @@ def htfly_common_setup(row_num, al_thickness):
             print(f"Moving filter wheel to {al_thickness} um Al attenuation.")
             yield from bps.mv(filter_wheel.thickness, al_thickness)
 
-        #Check that HTFly is at load position and move it there before opening shutters.
-        #This needs to be improved for flexibility.
-        if htfly.x.position != LOAD_HTFLY_POS_X:
-            print("Moving to load position.")
+        #Check whether HTFly position is at extremes, if not move to load.
+        if htfly.x.position == -285.0 or htfly.x.position == 285.0:
+            pass
+        else:
+            print("HTFly not at -285 or +285. Moving to load position.")
             yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
 
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
         #If the pps_shutter is disabled, exit and inform the user.
         #This nomenclature allows the shutters to remain open after RE completes.
-        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
-            raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+        #if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        #    raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
         
-        if pps_shutter.status.get() == 'Not Open':
-            print("The photon shutter was closed and is now being opened.")
-            pps_shutter.set('Open')
-            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        #if pps_shutter.status.get() == 'Not Open':
+        #    print("The photon shutter was closed and is now being opened.")
+        #    pps_shutter.set('Open')
+        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
             
         if pre_shutter.status.get() == 'Not Open':
             print("The pre-shutter was closed and is now being opened.")
             pre_shutter.set('Open')
-            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish   
+            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+
+def htfly_exp_cleanup():
+    print("Closing sample shutter.")
+    yield from bps.mv(diode_shutter, 'Close')
+    #yield from bps.mv(dg, 0)
+    yield from bps.sleep(1)
+    print("All done, ready for another row!")   
  
 def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
     '''
@@ -141,15 +149,15 @@ def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
     
         print(f"\nExposing row {row_num} at {htfly_vel}mm/sec with a {hslit_size}mm horizontal slit and {al_thickness}um Al attenuation.")
         print(f"This corresponds to an exposure time of {htfly_exp_time} milliseconds.\n")
-        yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
-    
-        #Cleanup: close shutters, return to load position.
-        print("Closing sample shutter and returning to load position")
-        yield from bps.mv(diode_shutter, 'Close')
-        #yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
-        yield from bps.sleep(1)
-        yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
-        print("All done, ready for another row!")
+        if htfly.x.position == -285.0:
+            yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
+            yield from htfly_exp_cleanup()
+            return
+
+        if htfly.x.position == 285.0:
+            yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
+            yield from htfly_exp_cleanup()
+            return
 
     return (yield from inner_htfly_exp())
 
@@ -191,6 +199,7 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
     _md.update(md or {})
 
     def htfly_exp_setup():
+        #Extract velocity and slit size from dictionary, throw error if not present.
         if exp_time in HTFLY_EXP_DICT:
             htfly_vel = HTFLY_EXP_DICT[exp_time][1]
             hslit_size = HTFLY_EXP_DICT[exp_time][0]
@@ -224,17 +233,18 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
         #Comment out Uniblitz actuation.
         #yield from bps.mv(dg, 30)               #set Uniblitz opening time
         #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
-    
+
+        #Two distinct conditions
         print(f"\nExposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.\n")
-        yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
-    
-        #Cleanup: close shutters, return to load position.
-        print("Closing sample shutter and returning to load position")
-        yield from bps.mv(diode_shutter, 'Close')
-        #yield from bps.mv(dg, 0)    #Close Uniblitz shutter after exposure
-        yield from bps.sleep(1)
-        yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
-        print("All done, ready for another row!")
+        if htfly.x.position == -285.0:
+            yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
+            yield from htfly_exp_cleanup()
+            return
+
+        if htfly.x.position == 285.0:
+            yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
+            yield from htfly_exp_cleanup()
+            return
 
     return (yield from inner_htfly_exp())
 
