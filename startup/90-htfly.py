@@ -41,7 +41,7 @@ def htfly_common_setup(row_num, al_thickness):
         if htfly.x.position == -285.0 or htfly.x.position == 285.0:
             pass
         else:
-            print("HTFly not at -285 or +285. Moving to load position.")
+            print(f"HTFly now at {htfly.x.position} and not at endpoints of -285 or +285. Moving to load position.")
             yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
 
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
@@ -272,3 +272,63 @@ def htfly_exp_plan():
     yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
     yield from htfly_move_to_load()
     return
+
+#work in progress, don't use for expts.
+def htfly_exp_plan_excel():
+    '''
+    Combination plan using htfly_exptime_row() function to expose n rows.
+    Takes input from an Excel plan file that describes row, exposure time, and attenuation.
+    Assumes plan files live in a plans subdirectory in the current working directory
+    Offers user a selection dialog to choose exposure plan to use.
+    '''
+    
+    def select_excel_file():
+        #Gets working directory and retrieves Excel files
+        plans_directory = os.path.join(os.getcwd(), 'plans')
+        htfly_plan_files = [os.path.join(plans_directory, file) for file in os.listdir(plans_directory) 
+                    if file.endswith('.xls') or file.endswith('.xlsx')]
+        
+        print("Select an Excel file:\n")
+        for i, file in enumerate(htfly_plan_files, start=1):
+            print(f"{i}. {file}")
+        
+        while True:
+            try:
+                choice = int(input("\nEnter the number of the file you want: "))
+                if 1 <= choice <= len(htfly_plan_files):
+                    return htfly_plan_files[choice - 1]
+                else:
+                    print("Invalid choice. Please enter a number corresponding to the file you want.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+     htfly_plan_file = select_excel_file()
+    htfly_exp_df = pd.read_excel(htfly_plan_file)
+    htfly_exp_df = htfly_exp_df[htfly_exp_df['Exp Time'] != '0ms']
+    
+    print("\nSelected exposure conditions:")
+    for _, row in htfly_exp_df.iterrows():
+        print(f"Row {row['Row']}, Exp time: {row['Exp Time']}, Aluminum attenuation: {row['Al Thickness']} um")
+    
+    check_correct = input("Are these correct (y/n): ")
+    if check_correct == 'y':
+        pass
+    elif check_correct == 'n':
+        raise ValueError("You entered NO. Check your plan files and retry the command.")
+    else:
+        raise ValueError(f"You entered {check_correct}. The response must be either y or n.")
+
+    #Do exposures iteratively, calling htfly_exptime_row() for each. Check PPS shutter beforehand, close it when done
+    if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+    for _, row in htfly_exp_df.iterrows():
+        row_num = row['Row']
+        exp_time = row['Exp Time']
+        al_thickness = row['Al Thickness']
+        yield from htfly_exptime_row(row_num, exp_time, al_thickness)
+    
+    row_num_counts = htfly_exp_df['Row'].value_counts()
+    print(f"\nExposure of {row_num_counts} rows completed, now closing the photon shutter and returning to load position.\n")
+    pps_shutter.set('Close')
+    yield from bps.sleep(3)
+    yield from htfly_move_to_load()
