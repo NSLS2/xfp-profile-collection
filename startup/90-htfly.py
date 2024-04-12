@@ -47,14 +47,14 @@ def htfly_common_setup(row_num, al_thickness):
 
         #Check state of pps_shutter and pre_shutter and open if needed and enabled.
         #If the pps_shutter is disabled, exit and inform the user.
-        #This nomenclature allows the shutters to remain open after RE completes.
-        #if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
-        #    raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+        #This nomenclature allows the shutters to remain open after each row.
+        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+            raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
         
-        #if pps_shutter.status.get() == 'Not Open':
-        #    print("The photon shutter was closed and is now being opened.")
-        #    pps_shutter.set('Open')
-        #    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+        if pps_shutter.status.get() == 'Not Open':
+            print("The photon shutter was closed and is now being opened.")
+            pps_shutter.set('Open')
+            yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
             
         if pre_shutter.status.get() == 'Not Open':
             print("The pre-shutter was closed and is now being opened.")
@@ -68,7 +68,7 @@ def htfly_exp_cleanup():
     yield from bps.sleep(1)
     print("All done, ready for another row!")   
  
-def htfly_exp_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
+def htfly_vel_size_row(row_num, htfly_vel, hslit_size, al_thickness, *, md=None):
     '''
     Function to expose a single row on the HTFly device, specifying velocity, 
     slit size, and attenuation. Moves device back to load position after exposure.
@@ -166,7 +166,7 @@ HTFLY_CONFIG_FILE_PATH = str(PROFILE_STARTUP_PATH / 'yaml-files/htfly_lookup.yam
 htfly_exp_config = load_yamlfile_config(HTFLY_CONFIG_FILE_PATH)
 HTFLY_EXP_DICT = htfly_exp_config.get('htfly_exp_dict', {})
 
-def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
+def htfly_exptime_row(row_num, exp_time, al_thickness, *, md=None):
     '''
     Function to expose a single row on the HTFly device, specifying exposure time
     and attenuation. Moves device back to load position after exposure.
@@ -179,7 +179,7 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
         Must be in the range 1 - 6
     
     exp_time: string
-        exposure time specified as '<xx>ms' or '<xx>us'
+        exposure time specified as '<xx>ms'.
         acceptable values specified by htfly_exp_dict in htfly_lookup.yaml 
 
     al_thickness: integer
@@ -208,15 +208,15 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
             exptime_keys = ", ".join(HTFLY_EXP_DICT.keys())
             raise ValueError(f"You entered {exp_time}. You must choose one of: {exptime_keys}")
                 
+        #calculate exposure time from velocity and slit size (verifies selection)
+        calc_htfly_exp_time = round((hslit_size / htfly_vel) * 1000, 3)
+        print(f"\nExposing row {row_num} for {calc_htfly_exp_time} ms using a slit size of {hslit_size} mm and velocity of {htfly_vel} mm/sec.")
+        
         #configure stage velocity and adc slit xgap
         print(f"Setting htfly_x stage velocity to {htfly_vel} mm/sec.")
         yield from bps.mv(htfly.x.velocity, htfly_vel)
         print(f"Moving the ADC horizontal slit size to {hslit_size} mm.")
         yield from bps.mv(adcslits.xgap, hslit_size)
-
-        #calculate exposure time from velocity and slit size (verifies selection)
-        calc_htfly_exp_time = round((hslit_size / htfly_vel) * 1000, 3)
-        print(f"A slit size of {hslit_size} mm and velocity of {htfly_vel} mm/s gives an exposure time of {calc_htfly_exp_time} ms.")
 
         yield from htfly_common_setup(row_num, al_thickness)
   
@@ -235,7 +235,7 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
         #yield from bps.mv(dg.fire, 1)           #fire Uniblitz
 
         #Two distinct conditions
-        print(f"\nExposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.\n")
+        print(f"\nExposing row {row_num} for {exp_time} at {al_thickness}um Al attenuation.")
         if htfly.x.position == -285.0:
             yield from bps.mv(htfly.x, EXPOSED_HTFLY_POS_X)
             yield from htfly_exp_cleanup()
@@ -248,3 +248,27 @@ def htfly_time_row(row_num, exp_time, al_thickness, *, md=None):
 
     return (yield from inner_htfly_exp())
 
+def htfly_exp_plan():
+    '''
+    Combination plan using htfly_exptime_row() function to expose n rows.
+    Collects input for row numbers, exposure times, and Al thicknesses to use as lists
+    '''
+    num_rows = int(input("How many rows will you expose (exclude any 0ms rows): "))
+    if num_rows < 1 or num_rows > 6:
+        raise ValueError(f"You entered {num_rows}. This must be a value between 1 and 6")
+    row_nums = list(map(int, input("Enter row numbers to expose, separated by commas: ").split(',')))
+    exp_times = list(map(str, input("Enter exposure times per row, separated by commas and spaces: ").split(', ')))
+    al_thicknesses = list(map(float, input("Enter aluminum thicknesses per row, separated by commas: ").split(',')))
+    # Check if the number of inputs provided matches the specified number of rows
+    if len(row_nums) != num_rows or len(exp_times) != num_rows or len(al_thicknesses) != num_rows:
+        raise ValueError("Number of inputs does not match the specified number of rows.")
+    
+    #Verify state of PPS shutter before kicking off exposures, do exposures, then close PPS shutter at the end.
+    if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
+    for row_num, exp_time, al_thickness in zip(row_nums, exp_times, al_thicknesses):
+        yield from htfly_exptime_row(row_num, exp_time, al_thickness)
+    print(f"\nExposure set for {num_rows} rows completed, now closing the photon shutter.\n")
+    pps_shutter.set('Close')
+    yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
+    return
