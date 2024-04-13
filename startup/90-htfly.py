@@ -302,7 +302,7 @@ def htfly_exp_plan_excel():
             except ValueError:
                 print("Invalid input. Please enter a number.")
 
-     htfly_plan_file = select_excel_file()
+    htfly_plan_file = select_excel_file()
     htfly_exp_df = pd.read_excel(htfly_plan_file)
     htfly_exp_df = htfly_exp_df[htfly_exp_df['Exp Time'] != '0ms']
     
