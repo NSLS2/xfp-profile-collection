@@ -327,8 +327,7 @@ def htfly_exp_plan_excel():
         al_thickness = row['Al Thickness']
         yield from htfly_exptime_row(row_num, exp_time, al_thickness)
     
-    row_num_counts = htfly_exp_df['Row'].value_counts()
-    print(f"\nExposure of {row_num_counts} rows completed, now closing the photon shutter and returning to load position.\n")
+    print("\nExposures completed, now closing the photon shutter and returning to load position.\n")
     pps_shutter.set('Close')
     yield from bps.sleep(3)
     yield from htfly_move_to_load()

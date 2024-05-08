@@ -2,7 +2,7 @@
 
 import httpx
 
-base_url = "https://api-staging.nsls2.bnl.gov"
+base_url = "https://api.nsls2.bnl.gov/v1"
 
 def get_from_api(url):
     if url:
@@ -14,13 +14,13 @@ def get_from_api(url):
         raise ValueError("URL cannot be empty")
 
 def get_proposals_from_cycle(cycle):
-    return get_from_api(f"proposals/{cycle}")
+    return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")['proposals']
 def get_proposal_info(proposal_id):
-    return get_from_api(f"proposal/{proposal_id}")
+    return get_from_api(f"proposal/{proposal_id}")['proposal']
 
 def get_proposals_for_instrument(cycle, instrument):
     proposals_on_instrument = []
-    proposals = get_proposals_from_cycle(cycle)[0]["proposals"]
+    proposals = get_proposals_from_cycle(cycle)
     for proposal_num in proposals:
         proposal = get_proposal_info(proposal_num)
         if instrument in proposal['instruments']:
