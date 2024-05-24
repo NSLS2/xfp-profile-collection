@@ -27,6 +27,9 @@ def get_proposals_for_instrument(cycle, instrument):
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument
 
+def get_current_cycle():
+    return get_from_api(f"facility/nsls2/cycles/current")["cycle"]
+
 def inst_proposals_report(cycle, instrument, detail):
     '''
     Queries NSLS-II API for proposals for specified instrument and cycle.
@@ -108,11 +111,13 @@ def set_user_md_api():
     Function to define user / experiment values as persistant metadata
     Retrieve info from NSLS-II API based on collected proposal_id.
     '''
-    short_report = input("Retrieve list of proposals (y/n)? ")
+    short_report = input("Retrieve list of proposals for current cycle (y/n)? ")
     if short_report == 'y':
-        cycle_num = input("Which cycle (e.g. '2024-1')? ")
+        cycle_num = get_current_cycle()
         inst_proposals_report(cycle=cycle_num, instrument='XFP', detail='short')
         print(" ")
+    else:
+        pass
     proposal_num = input("Enter the proposal number: ")
     api_proposal_report(proposal_num)
     saf_num = input("\nEnter the SAF number: ")
