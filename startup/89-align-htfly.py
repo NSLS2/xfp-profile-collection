@@ -38,6 +38,14 @@ def htfly_align():
     start_htflyx_vel = htfly.x.velocity.get()
     yield from bps.mv(htfly.x.velocity, 5)  #Slow x velocity for alignment purposes
 
+    #Ensure ADC slit x_gap is open (>= 6.0mm).
+    old_xgap = round(adcslits.xgap.user_readback.get(), 3)
+    if old_xgap < 6.0:
+        print(f'ADC slit horizontal size is {old_xgap} mm. Opening to 6.0 mm.')
+        yield from bps.mv(adcslits.xgap, 6.0)
+    else:
+        pass
+
     if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
         raise Exception("Can't open photon shutter! Check that the hutch is interlocked and the shutter is enabled.")
         
