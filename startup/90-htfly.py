@@ -3,9 +3,6 @@
 LOAD_HTFLY_POS_X = -285
 EXPOSED_HTFLY_POS_X = 285
 
-#Define vertical position of row 3
-row3_y_vert = -3.0
-
 def htfly_move_to_load():
     if htfly.x.position != LOAD_HTFLY_POS_X:
         yield from bps.mv(htfly.x, LOAD_HTFLY_POS_X)
@@ -20,7 +17,7 @@ def htfly_common_setup(row_num, al_thickness):
         and checks state of PPS and pre-shutters.
         '''
         #Move to desired row number, throw exception if row /= 1-6
-        htfly_row_vert = [row3_y_vert - 18, row3_y_vert - 9, row3_y_vert, row3_y_vert + 9, row3_y_vert +18, row3_y_vert + 27]
+        htfly_row_vert = [ROW3_Y_VERT - 18, ROW3_Y_VERT - 9, ROW3_Y_VERT, ROW3_Y_VERT + 9, ROW3_Y_VERT +18, ROW3_Y_VERT + 27]
         if (row_num < 1) or (row_num > 6):
             raise ValueError(f"You entered row {row_num}. Row value must be in the range 1 - 6!")
         else:
