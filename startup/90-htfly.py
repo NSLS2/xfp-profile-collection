@@ -1,13 +1,10 @@
 #Plans for operation of the HTfly device.
-#Define parameters for future alignment routine, for D3 hole
-#HTFLY_X_START = 0.50
-#HTFLY_Y_START = -2.9
 
 LOAD_HTFLY_POS_X = -285
 EXPOSED_HTFLY_POS_X = 285
 
 #Define vertical position of row 3
-row3_y_vert = -2.8
+row3_y_vert = -3.0
 
 def htfly_move_to_load():
     if htfly.x.position != LOAD_HTFLY_POS_X:
