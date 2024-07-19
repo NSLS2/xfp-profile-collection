@@ -329,6 +329,9 @@ class HTFlyGUI(QtWidgets.QMainWindow):
             if row["Sample name"] == "" or row["Exposure time (ms)"] == 0:
                 for widget in widget_row:
                     widget.setDisabled(True)
+            else:
+                for widget in widget_row:
+                    widget.setDisabled(False)
 
     def is_valid_excel(self, df):
         if len(df) != 6:
