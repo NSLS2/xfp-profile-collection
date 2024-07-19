@@ -250,8 +250,10 @@ class HTFlyGUI(QtWidgets.QMainWindow):
                 lambda state, cb=checkbox: self.check_toggled(cb, state)
             )
             led_indicator = LedIndicator()
-            sample_id_label = QtWidgets.QLabel(f"Sample {row}")
-            exposure_time_label = QtWidgets.QLabel("0")
+            sample_id_label = QtWidgets.QLineEdit(f"Sample {row}")
+            exposure_time_label = QtWidgets.QLineEdit("0")
+            onlyInt = QtGui.QIntValidator()
+            exposure_time_label.setValidator(onlyInt)
             attenuation_dropdown = QtWidgets.QComboBox()
             if self.wheel_positions:
                 attenuation_dropdown.addItems([x["text"] for x in self.wheel_positions])
