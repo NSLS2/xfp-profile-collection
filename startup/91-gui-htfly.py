@@ -73,8 +73,10 @@ class RunEngineControls:
         self.handle_state_change(self.RE.state, None)
 
     def run(self):
-
-        if EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0:
+        if (
+            EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0
+            and not mode.test_mode
+        ):
             self.label.setText("Shutter\nnot\nenabled")
             self.label.setStyleSheet(f"QLabel {{background-color: red; color: white}}")
         else:
@@ -270,10 +272,19 @@ class HTFlyGUI(QtWidgets.QMainWindow):
 
         # Adding import button
         import_button = QtWidgets.QPushButton("Import Excel Plan")
+        self.checkbox_test_mode = QtWidgets.QCheckBox("Test mode")
+        self.checkbox_test_mode.setChecked(mode.test_mode)
+        self.checkbox_test_mode.setCheckable(True)
+        self.checkbox_test_mode.clicked.connect(self.switch_test_mode)
+
+        self.widget_layout.addWidget(self.checkbox_test_mode, 1, 5)
         self.widget_layout.addWidget(import_button, 2, 5)
         import_button.clicked.connect(self.import_excel_plan)
         self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
         self.widget_layout.addWidget(self.re_controls.widget, 3, 5)
+
+    def switch_test_mode(self, state):
+        mode.test_mode = state
 
     def check_toggled(self, checkbox, check_state):
         if check_state == QtCore.Qt.CheckState.Checked:
