@@ -6,6 +6,26 @@ from ophyd import EpicsSignalRO
 from qtpy import QtCore, QtGui, QtWidgets
 
 
+class TestMode:
+    def __init__(self, test_mode=False):
+        self._test_mode = test_mode
+        self._valid_values = (True, False)
+
+    @property
+    def test_mode(self):
+        return self._test_mode
+
+    @test_mode.setter
+    def test_mode(self, test_mode):
+        assert any(
+            [test_mode is x for x in self._valid_values]
+        ), f"The value should be one of {self._valid_values}"
+        self._test_mode = test_mode
+
+
+mode = TestMode(test_mode=False)
+
+
 class LEDState(Enum):
     QUEUED = QtCore.Qt.blue
     COLLECTING = QtCore.Qt.red
@@ -254,7 +274,7 @@ class HTFlyGUI(QtWidgets.QMainWindow):
             led_indicator = LedIndicator()
             sample_id_label = QtWidgets.QLineEdit(f"Sample {row}")
             exposure_time_label = QtWidgets.QLineEdit("0")
-            onlyInt = QtGui.QIntValidator()
+            onlyInt = QtGui.QDoubleValidator()
             exposure_time_label.setValidator(onlyInt)
             attenuation_dropdown = QtWidgets.QComboBox()
             if self.wheel_positions:
@@ -357,12 +377,15 @@ class HTFlyGUI(QtWidgets.QMainWindow):
         for row_num, widget_row in enumerate(self.widget_rows):
             if widget_row[0].checkState() == QtCore.Qt.CheckState.Checked:
                 self.led_color_change_signal.emit(row_num, LEDState.COLLECTING)
-                exp_time = int(widget_row[3].text())
+                exp_time = float(widget_row[3].text())
                 al_thickness = self.wheel_positions[widget_row[4].currentIndex()][
                     "thickness"
                 ]
-                yield from htfly_exptime_row(row_num - 1, exp_time, al_thickness)
                 print(f"Experiment running {row_num} {exp_time} {al_thickness}")
+                if exp_time.is_integer():
+                    exp_time = int(exp_time)
+
+                yield from htfly_exptime_row(row_num + 1, f"{exp_time}ms", al_thickness)
                 self.led_color_change_signal.emit(row_num, LEDState.COMPLETE)
                 num_rows += 1
         print(
@@ -381,15 +404,5 @@ class HTFlyGUI(QtWidgets.QMainWindow):
         dlg.setText(message)
         dlg.exec()
 
-
-"""
-if __name__ == "__main__":
-    app = QtWidgets.QApplication([])
-
-    main = HTFlyGUI()
-    main.show()
-
-    app.exec_()
-"""
 
 HTFlygui = HTFlyGUI(filter_obj=filter_wheel)
