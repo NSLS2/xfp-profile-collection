@@ -148,7 +148,7 @@ class RunEngineControls:
         self.label.setText(state)
 
         self.info_label.setText(
-            f"HT motor positions:\n\n{motors_positions(self.motors)}"
+            f"HTFly motor positions:\n\n{motors_positions(self.motors)}"
         )
         self.button_run.setEnabled(button_run_enabled)
         self.button_run.setText(button_run_text)
@@ -170,7 +170,7 @@ class HTFlyGUI(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None, filter_obj=None) -> None:
         super(HTFlyGUI, self).__init__(parent)
-        self.setWindowTitle("XFP High Throughput Fly")
+        self.setWindowTitle("XFP High Throughput Fly Device")
         self.main_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.main_widget)
         self.wheel_positions = [
@@ -300,7 +300,7 @@ class HTFlyGUI(QtWidgets.QMainWindow):
         self.widget_layout.addWidget(self.checkbox_test_mode, 1, 5)
         self.widget_layout.addWidget(import_button, 2, 5)
         import_button.clicked.connect(self.import_excel_plan)
-        self.re_controls = RunEngineControls(RE, self, motors=[ht.x, ht.y])
+        self.re_controls = RunEngineControls(RE, self, motors=[htfly.x, htfly.y])
         self.widget_layout.addWidget(self.re_controls.widget, 3, 5)
 
     def switch_test_mode(self, state):

@@ -1,5 +1,5 @@
 #Alignment positions for D3 hole on HTFly
-HTFLY_X_START = -6.4
+HTFLY_X_START = 0.80
 HTFLY_Y_START = -3.2
 
 #Define vertical position of row 3
