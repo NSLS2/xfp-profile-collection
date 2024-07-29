@@ -12,14 +12,14 @@ MICRO_PINHOLE_DICT = mtr_pos_config.get('micropinhole_dict', {})
 def choose_pinhole(pinhole, *, md=None):
     '''
     Function to select pinhole using cvd_x/y stages.
-    Currently 100um, 1mm, 1.5mm, and 2mm pinholes are available.
+    Currently 150um, 300um, 500um, 1mm, 1.5mm, and 2mm pinholes are available.
     Stage positions are listed in position_lookup.yaml.
 
     Parameters
     ----------
     pinhole: string
         Pinhole to use.
-        Must be one of '100um', '1mm', '1.5mm' or '2mm'
+        Must be one of '150um', '300um', '500um', '1mm', '1.5mm' or '2mm'
     
     md: optional user specified metadata
         By default, the pinhole size is written as metadata for each successful run.
