@@ -125,9 +125,10 @@ class Table3(Device):
 tbl3 = Table3('XF:17BMA-ES:3{Tbl:3-Ax:', name='tbl3')
 
 #Galil1 mod12 and mod34 xy stages. Only conencted for greenfield expts.
+#Added settle time for raster scanning with slower detector response.
 class Mod12(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr', labels=('greenfield ES:2',))
-    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('greenfield ES:2',))
+    x = Cpt(EpicsMotor, 'X}Mtr', settle_time=2, labels=('greenfield ES:2',))
+    y = Cpt(EpicsMotor, 'Y}Mtr', settle_time=2, labels=('greenfield ES:2',))
 
 mod12 = Mod12('XF:17BMA-ES:2{Mod:12-Ax:', name='mod12')
 
