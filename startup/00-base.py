@@ -37,4 +37,4 @@ runengine_metadata_dir = appdirs.user_data_dir(appname="bluesky") / Path(
 # PersistentDict will create the directory if it does not exist
 RE.md = PersistentDict(runengine_metadata_dir)
 
-_create_qApp()
+app = _create_qApp()

@@ -3,7 +3,104 @@ from enum import Enum
 
 import pandas as pd
 from ophyd import EpicsSignalRO
-from qtpy import QtCore, QtGui, QtWidgets
+
+from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+import matplotlib.pyplot as plt
+
+
+from bluesky.plan_stubs import sleep
+
+from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
+import matplotlib.pyplot as plt
+
+
+class RunEngineControlsHTFly:
+    def __init__(self, RE, GUI=None):
+
+        self.RE = RE
+        self.GUI = GUI
+
+        self.widget = button_widget = QtWidgets.QWidget()
+        button_layout = QtWidgets.QHBoxLayout()
+        button_widget.setLayout(button_layout)
+
+        self.label = label = QtWidgets.QLabel('Idle')
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setStyleSheet('QLabel {background-color: green; color: white}')
+        button_layout.addWidget(label)
+
+        # Run button to execute RE
+        self.button_run = button_run = QtWidgets.QPushButton('Run')
+        button_run.clicked.connect(self.run)
+        button_layout.addWidget(button_run)
+
+        # Run button to execute RE
+        self.button_pause = button_pause = QtWidgets.QPushButton('Pause')
+        button_pause.clicked.connect(self.pause)
+        button_layout.addWidget(button_pause)
+
+        self.info_label = info_label = QtWidgets.QLabel('Motors info')
+        info_label.setAlignment(QtCore.Qt.AlignLeft)
+        # label.setStyleSheet('QLabel {background-color: green; color: white}')
+        button_layout.addWidget(info_label)
+
+        self.RE.state_hook = self.handle_state_change
+        self.handle_state_change(self.RE.state, None)
+
+    def run(self):
+        if self.RE.state == 'idle':
+            #self.RE(sleep(2.0))
+            self.RE(self.GUI.plan())
+        else:
+            self.RE.resume()
+
+    def pause(self):
+        if self.RE.state == 'running':
+            self.RE.request_pause()
+        elif self.RE.state == 'paused':
+            self.RE.stop()
+
+    def handle_state_change(self, new, old):
+        if new == 'idle':
+            color = 'green'
+            button_run_enabled = True
+            button_pause_enabled = False
+            button_run_text = 'Run'
+            button_pause_text = 'Pause'
+        elif new == 'paused':
+            color = 'blue'
+            button_run_enabled = True
+            button_pause_enabled = True
+            button_run_text = 'Resume'
+            button_pause_text = 'Stop'
+        elif new == 'running':
+            color = 'red'
+            button_run_enabled = False
+            button_pause_enabled = True
+            button_run_text = 'Run'
+            button_pause_text = 'Pause'
+        else:
+            color = 'darkGray'
+            button_run_enabled = False
+            button_pause_enabled = False
+            button_run_text = 'Run'
+            button_pause_text = 'Stop'
+
+        state = str(new).capitalize()
+
+        width = 60
+        height = 60
+        self.label.setFixedHeight(width)
+        self.label.setFixedWidth(height)
+        self.label.setStyleSheet(f'QLabel {{background-color: {color}; color: white}}')
+        self.label.setText(state)
+
+        self.button_run.setEnabled(button_run_enabled)
+        self.button_run.setText(button_run_text)
+        self.button_pause.setEnabled(button_pause_enabled)
+        self.button_pause.setText(button_pause_text)
+
+
 
 
 class TestMode:
@@ -57,105 +154,6 @@ class LedIndicator(QtWidgets.QLabel):
         self.state = LEDState(state)
         self.update()  # This will trigger a repaint
 
-
-class RunEngineControls:
-    def __init__(self, RE, GUI, motors):
-
-        self.RE = RE
-        self.GUI = GUI
-        self.motors = motors
-
-        self.widget = button_widget = QtWidgets.QWidget()
-        button_layout = QtWidgets.QHBoxLayout()
-        button_widget.setLayout(button_layout)
-
-        self.label = label = QtWidgets.QLabel("Idle")
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet("QLabel {background-color: green; color: white}")
-        button_layout.addWidget(label)
-
-        # Run button to execute RE
-        self.button_run = button_run = QtWidgets.QPushButton("Run")
-        button_run.clicked.connect(self.run)
-        button_layout.addWidget(button_run)
-
-        # Run button to execute RE
-        self.button_pause = button_pause = QtWidgets.QPushButton("Pause")
-        button_pause.clicked.connect(self.pause)
-        button_layout.addWidget(button_pause)
-
-        self.info_label = info_label = QtWidgets.QLabel("Motors info")
-        info_label.setAlignment(QtCore.Qt.AlignLeft)
-        # label.setStyleSheet('QLabel {background-color: green; color: white}')
-        button_layout.addWidget(info_label)
-
-        self.RE.state_hook = self.handle_state_change
-        self.handle_state_change(self.RE.state, None)
-
-    def run(self):
-        if (
-            EpicsSignalRO(pps_shutter.enabled_status.pvname).get() == 0
-            and not mode.test_mode
-        ):
-            self.label.setText("Shutter\nnot\nenabled")
-            self.label.setStyleSheet(f"QLabel {{background-color: red; color: white}}")
-        else:
-            if self.RE.state == "idle":
-                self.RE(self.GUI.plan())
-            else:
-                self.RE.resume()
-
-    def pause(self):
-        if self.RE.state == "running":
-            self.RE.request_pause()
-        elif self.RE.state == "paused":
-            self.RE.stop()
-
-    def handle_state_change(self, new, old):
-        new = "idle"
-        if new == "idle":
-            color = "green"
-            button_run_enabled = True
-            button_pause_enabled = False
-            button_run_text = "Run"
-            button_pause_text = "Pause"
-        elif new == "paused":
-            color = "blue"
-            button_run_enabled = True
-            button_pause_enabled = True
-            button_run_text = "Resume"
-            button_pause_text = "Stop"
-        elif new == "running":
-            color = "red"
-            button_run_enabled = False
-            button_pause_enabled = True
-            button_run_text = "Run"
-            button_pause_text = "Pause"
-        else:
-            color = "darkGray"
-            button_run_enabled = False
-            button_pause_enabled = False
-            button_run_text = "Run"
-            button_pause_text = "Stop"
-
-        state = str(new).capitalize()
-
-        width = 60
-        height = 60
-        self.label.setFixedHeight(width)
-        self.label.setFixedWidth(height)
-        self.label.setStyleSheet(f"QLabel {{background-color: {color}; color: white}}")
-        self.label.setText(state)
-
-        self.info_label.setText(
-            f"HTFly motor positions:\n\n{motors_positions(self.motors)}"
-        )
-        self.button_run.setEnabled(button_run_enabled)
-        self.button_run.setText(button_run_text)
-        self.button_pause.setEnabled(button_pause_enabled)
-        self.button_pause.setText(button_pause_text)
-
-
 def motors_positions(motors):
     format_str = []
     motor_values = []
@@ -165,12 +163,62 @@ def motors_positions(motors):
     return "\n".join(format_str).format(*motor_values)
 
 
-class HTFlyGUI(QtWidgets.QMainWindow):
+class HTFlyGUI:
+    def __init__(self, filter_obj):
+        self.re_controls = RunEngineControlsHTFly(RE, self)
+        self.main_window = HTFlyGUIMainWindow(filter_obj=filter_obj, re_controls=self.re_controls)
+
+    def show(self):
+        self.main_window.show()
+
+    def close(self):
+        self.main_window.close()
+
+
+    def plan(self):
+        def close_shutters():
+            #pps_shutter.set("Close")
+            yield from bps.mv(pps_shutter, 'Close')
+            yield from bps.sleep(
+                3
+            )  # Allow some wait time for the shutter opening to finish
+            yield from htfly_move_to_load()
+
+        def main_plan():
+            num_rows = 0
+            for row_num, widget_row in enumerate(self.main_window.widget_rows):
+                if widget_row[0].checkState() == QtCore.Qt.CheckState.Checked:
+                    self.main_window.led_color_change_signal.emit(row_num, LEDState.COLLECTING)
+                    exp_time = float(widget_row[3].text())
+                    al_thickness = self.main_window.wheel_positions[widget_row[4].currentIndex()][
+                        "thickness"
+                    ]
+                    print(f"Experiment running {row_num} {exp_time} {al_thickness}")
+                    if exp_time.is_integer():
+                        exp_time = int(exp_time)
+
+                    uid = (yield from htfly_exptime_row(row_num + 1, f"{exp_time}ms", al_thickness))
+                    # yield from test_plan()
+                    print(f"UID from htfly_exptime_row: {uid}")
+                    self.main_window.led_color_change_signal.emit(row_num, LEDState.COMPLETE)
+                    num_rows += 1
+            print(
+                f"\nExposure set for {num_rows} row(s) completed, now closing the photon shutter and returning to load position.\n"
+            )
+
+            
+        
+        return (yield from bpp.finalize_wrapper(main_plan(),
+                                                close_shutters()))
+
+
+class HTFlyGUIMainWindow(QtWidgets.QMainWindow):
     led_color_change_signal = QtCore.Signal(int, LEDState)
 
-    def __init__(self, parent=None, filter_obj=None) -> None:
-        super(HTFlyGUI, self).__init__(parent)
+    def __init__(self, parent=None, filter_obj=None, re_controls=None) -> None:
+        super(HTFlyGUIMainWindow, self).__init__(parent)
         self.setWindowTitle("XFP High Throughput Fly Device")
+        self.re_controls = re_controls
         self.main_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.main_widget)
         self.wheel_positions = [
@@ -300,7 +348,7 @@ class HTFlyGUI(QtWidgets.QMainWindow):
         self.widget_layout.addWidget(self.checkbox_test_mode, 1, 5)
         self.widget_layout.addWidget(import_button, 2, 5)
         import_button.clicked.connect(self.import_excel_plan)
-        self.re_controls = RunEngineControls(RE, self, motors=[htfly.x, htfly.y])
+        #
         self.widget_layout.addWidget(self.re_controls.widget, 3, 5)
 
     def switch_test_mode(self, state):
@@ -372,37 +420,17 @@ class HTFlyGUI(QtWidgets.QMainWindow):
 
         return True
 
-    def plan(self):
-        num_rows = 0
-        for row_num, widget_row in enumerate(self.widget_rows):
-            if widget_row[0].checkState() == QtCore.Qt.CheckState.Checked:
-                self.led_color_change_signal.emit(row_num, LEDState.COLLECTING)
-                exp_time = float(widget_row[3].text())
-                al_thickness = self.wheel_positions[widget_row[4].currentIndex()][
-                    "thickness"
-                ]
-                print(f"Experiment running {row_num} {exp_time} {al_thickness}")
-                if exp_time.is_integer():
-                    exp_time = int(exp_time)
-
-                yield from htfly_exptime_row(row_num + 1, f"{exp_time}ms", al_thickness)
-                self.led_color_change_signal.emit(row_num, LEDState.COMPLETE)
-                num_rows += 1
-        print(
-            f"\nExposure set for {num_rows} row(s) completed, now closing the photon shutter and returning to load position.\n"
-        )
-
-        pps_shutter.set("Close")
-        yield from bps.sleep(
-            3
-        )  # Allow some wait time for the shutter opening to finish
-        yield from htfly_move_to_load()
-
     def show_error_dialog(self, message):
         dlg = QtWidgets.QMessageBox(self)
         dlg.setWindowTitle("Error")
         dlg.setText(message)
         dlg.exec()
 
+try:
+    HTFlygui.main_window.close()
+except NameError:
+    pass
+
 
 HTFlygui = HTFlyGUI(filter_obj=filter_wheel)
+
