@@ -666,6 +666,7 @@ class XFPSampleSelector:
         return return_list
 
     def show(self):
+        RE.state_hook = self.re_controls.handle_state_change
         return self.window.show()
 
     def close(self):

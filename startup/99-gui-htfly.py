@@ -169,6 +169,7 @@ class HTFlyGUI:
         self.main_window = HTFlyGUIMainWindow(filter_obj=filter_obj, re_controls=self.re_controls)
 
     def show(self):
+        RE.state_hook = self.re_controls.handle_state_change
         self.main_window.show()
 
     def close(self):
