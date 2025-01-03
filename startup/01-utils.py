@@ -20,8 +20,8 @@ def clear_user_md():
     #Current proposal/SAF valid for CY2024
     inp_choice = input("Are you sure you want to clear metadata (y/n)? ")
     if inp_choice=='y' or inp_choice=='yes':
-        RE.md['proposal'] = '314907'
-        RE.md['SAF'] = '312832'
+        RE.md['proposal'] = '317793'
+        RE.md['SAF'] = '315353'
         RE.md['PI'] = 'Farquhar'
         RE.md['experimenter'] = 'Farquhar'
         print("Reset metadata keys to commissioning proposal.")
