@@ -12,14 +12,14 @@ attenuator_positions:
  9mm: 80.0
 
 #Position lookup for pinholes in [X, Y] format.
-#Updated 1/23/25
+#Updated 4/3/25
 pinhole_dict:
- "2mm": [-6.2, -5.7]
- "1.5mm": [-6.1, -15.9]
- "1mm": [-6.1, -25.9]
- "500um": [3.7, -5.9]
- "300um": [3.85, -15.9]
- "150um": [4.1, -25.9]
+ "2mm": [-6.1, -4.9]
+ "1.5mm": [-6.0, -15.0]
+ "1mm": [-5.9, -24.9]
+ "500um": [3.8, -5.1]
+ "300um": [3.9, -15.1]
+ "150um": [4.1, -25.1]
 
 #Position lookup for micro pinholes on mod34 stage
 micropinhole_dict:
