@@ -12,7 +12,7 @@ import nslsii
 import pandas as pd
 import yaml
 from bluesky.callbacks.best_effort import BestEffortCallback
-from bluesky.utils import PersistentDict
+#from bluesky.utils import PersistentDict
 from matplotlib._pylab_helpers import Gcf
 from matplotlib.backends.backend_qt5 import _create_qApp
 import redis
