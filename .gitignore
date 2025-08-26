@@ -9,3 +9,6 @@ ht_coords*.csv
 static/
 startup/examples/
 .idea/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
