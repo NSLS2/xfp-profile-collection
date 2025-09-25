@@ -12,15 +12,21 @@ from ophyd import (EpicsMotor, Device,
 #ring current
 beam_ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
 
-#FE slits, real motors only
+#FE slits, real and virtual motors
 
 class FE_WhiteBeam_Slits(Device):
     top = Cpt(EpicsMotor, '1-Ax:T}Mtr', labels=('FE Slits',))
     bot = Cpt(EpicsMotor, '2-Ax:B}Mtr', labels=('FE Slits',))
     inb = Cpt(EpicsMotor, '2-Ax:I}Mtr', labels=('FE Slits',))
     outb = Cpt(EpicsMotor, '1-Ax:O}Mtr', labels=('FE Slits',))
+    hsize = Cpt(EpicsMotor, '12-Ax:X}size', labels=('FE Slits',))
+    vsize = Cpt(EpicsMotor, '12-Ax:Y}size', labels=('FE Slits'))
+    hctr = Cpt(EpicsMotor, '12-Ax:X}center', labels=('FE Slits'))
+    vctr = Cpt(EpicsMotor, '12-Ax:Y}center', labels=('FE Slits'))
 
 fe_wb_slits = FE_WhiteBeam_Slits('FE:C17B-OP{Slt:', name='fe_wb_slits')
+
+fe_slit_hold_sentinel = EpicsSignal('XF:17BM{Sentinel}slit_hold', name='fe_slit_sentinel')
 
 #FE mirror including thermocouple signals
 
