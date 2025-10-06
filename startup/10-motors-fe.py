@@ -19,6 +19,10 @@ class FE_WhiteBeam_Slits(Device):
     bot = Cpt(EpicsMotor, '2-Ax:B}Mtr', labels=('FE Slits',))
     inb = Cpt(EpicsMotor, '2-Ax:I}Mtr', labels=('FE Slits',))
     outb = Cpt(EpicsMotor, '1-Ax:O}Mtr', labels=('FE Slits',))
+    hsize = Cpt(EpicsSignalRO, '12-Ax:X}t2.C', labels=('FE Slits',))
+    vsize = Cpt(EpicsSignalRO, '12-Ax:Y}t2.C', labels=('FE Slits',))
+    hctr = Cpt(EpicsSignalRO, '12-Ax:X}t2.D', labels=('FE Slits',))
+    vctr = Cpt(EpicsSignalRO, '12-Ax:Y}t2.D', labels=('FE Slits',))
     
 fe_wb_slits = FE_WhiteBeam_Slits('FE:C17B-OP{Slt:', name='fe_wb_slits')
 
