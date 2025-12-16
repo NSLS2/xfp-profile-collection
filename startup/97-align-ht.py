@@ -59,6 +59,7 @@ def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True
     _y_start = None
     if run:
         def close_shutters():
+            yield from bps.mv(dg, 0)
             yield from bps.mv(diode_shutter, 'Close')
             # yield from bps.mv(shutter, 'Close')
             if not mode.test_mode:
