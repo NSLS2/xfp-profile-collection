@@ -17,11 +17,11 @@ def set_user_md():
 
 def clear_user_md():
     '''Clear user metadata and set to setup/commissioning values'''
-    #Current proposal/SAF valid for CY2024
+    #Current proposal/SAF valid for CY2026
     inp_choice = input("Are you sure you want to clear metadata (y/n)? ")
     if inp_choice=='y' or inp_choice=='yes':
-        RE.md['proposal'] = '317793'
-        RE.md['SAF'] = '315353'
+        RE.md['proposal'] = '320319'
+        RE.md['SAF'] = '317756'
         RE.md['PI'] = 'Farquhar'
         RE.md['experimenter'] = 'Farquhar'
         print("Reset metadata keys to commissioning proposal.")
