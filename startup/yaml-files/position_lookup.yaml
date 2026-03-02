@@ -23,6 +23,6 @@ pinhole_dict:
 
 #Position lookup for micro pinholes on mod34 stage
 micropinhole_dict:
- "in": [25, 29.1]
- "out": [45, 2]
+ "in": [25.0, 29.1]
+ "out": [45.0, 2.0]
  
