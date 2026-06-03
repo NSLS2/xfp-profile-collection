@@ -6,7 +6,7 @@ base_url = "https://api.nsls2.bnl.gov/v1"
 
 def get_from_api(url):
     if url:
-        response = httpx.get(f"{base_url}/{url}")
+        response = httpx.get(f"{base_url}/{url}", timeout=30)
         if response.status_code == httpx.codes.OK:
             return response.json()
         raise RuntimeError(f"Failed to get value from {url}. response code: {response.status_code}")
@@ -27,6 +27,15 @@ def get_proposals_for_instrument(cycle, instrument):
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument
 
+def get_pi_users(proposal):
+    seen = set()
+    pis = []
+    for user in proposal['users']:
+        if user['is_pi'] and user['username'] not in seen:
+            seen.add(user['username'])
+            pis.append(user)
+    return pis
+
 def get_current_cycle():
     return get_from_api(f"facility/nsls2/cycles/current")["cycle"]
 
@@ -45,7 +54,7 @@ def inst_proposals_report(cycle, instrument, detail):
             single_prop = get_proposal_info(item)
             print("\nProposal #:", single_prop['proposal_id'], " Title:", single_prop['title'])
             print("Proposal Type:", single_prop['type'])
-            pi_users = [user for user in single_prop['users'] if user['is_pi']]
+            pi_users = get_pi_users(single_prop)
             for i, user in enumerate(pi_users):
                 print(f"Proposal PI: {user['first_name']} {user['last_name']}", end="")
                 if i < len(pi_users) - 1:
@@ -64,8 +73,7 @@ def inst_proposals_report(cycle, instrument, detail):
             single_prop = get_proposal_info(item)
             print("\nProposal #:", single_prop['proposal_id'], " Title:", single_prop['title'])
             print("Proposal Type:", single_prop['type'])
-            #sometimes this prints out multiple entries for same PI due to data source
-            pi_users = [user for user in single_prop['users'] if user['is_pi']]
+            pi_users = get_pi_users(single_prop)
             for i, user in enumerate(pi_users):
                 print(f"Proposal PI: {user['first_name']} {user['last_name']}", end="")
                 if i < len(pi_users) - 1:
@@ -92,7 +100,7 @@ def api_proposal_report(proposal_num):
     print("Cycles:", single_prop['cycles'])
     print("Approved SAFs:", ", ".join(approved_saf_ids))
     sorted_users = sorted(single_prop['users'], key=lambda x: x['last_name'])
-    pi_users = [user for user in single_prop['users'] if user['is_pi']]
+    pi_users = get_pi_users(single_prop)
     for i, user in enumerate(pi_users):
         print(f"Proposal PI: {user['first_name']} {user['last_name']}", end="")
         if i < len(pi_users) - 1:
