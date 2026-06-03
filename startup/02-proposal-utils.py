@@ -67,7 +67,7 @@ def inst_proposals_report(cycle, instrument, detail):
                     print(",", end=" ")
             print(" ")
     
-    if detail == 'medium':
+    elif detail == 'medium':
         print(f"\nMedium Report of {instrument} proposals for {cycle} cycle")
         for item in proposal_list:
             single_prop = get_proposal_info(item)
@@ -80,11 +80,14 @@ def inst_proposals_report(cycle, instrument, detail):
                     print(",", end=" ")
             print(" ")
     
-    if detail == 'short':
+    elif detail == 'short':
         print(f"\nShort Report of {instrument} proposals for {cycle} cycle")
         for item in proposal_list:
             single_prop = get_proposal_info(item)
             print("Proposal #:", single_prop['proposal_id'], " Title:", single_prop['title'])
+    
+    else:
+        raise ValueError(f"detail must be 'long', 'medium', or 'short'; got {detail!r}")
 
 def api_proposal_report(proposal_num):
     '''
@@ -112,6 +115,7 @@ def api_proposal_report(proposal_num):
         if i < len(sorted_users) - 1:
             print(",", end=" ")
     print(" ")
+    return approved_saf_ids
 
 #Define metadata for user, proposal, and SAF while checking the API
 def set_user_md_api():
@@ -127,8 +131,13 @@ def set_user_md_api():
     else:
         pass
     proposal_num = input("Enter the proposal number: ")
-    api_proposal_report(proposal_num)
+    approved_saf_ids = api_proposal_report(proposal_num)
     saf_num = input("\nEnter the SAF number: ")
+    if approved_saf_ids:
+        while saf_num not in approved_saf_ids:
+            print(f"  '{saf_num}' is not an approved SAF for this proposal.")
+            print(f"  Approved SAFs: {', '.join(approved_saf_ids)}")
+            saf_num = input("Enter the SAF number: ")
     pi_name = input("Enter last name of the PI: ")
     user_name = input("Enter last name of the lead experimenter: ")
     RE.md['proposal'] = proposal_num
