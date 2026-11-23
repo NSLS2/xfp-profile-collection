@@ -47,7 +47,7 @@ def _htfly_align(fig=None, ax_hor=None, ax_ver=None):
         
     if pps_shutter.status.get() == 'Not Open':
         print("The photon shutter was closed and is now being opened.")
-        pps_shutter.set('Open')
+        yield from bps.abs_set(pps_shutter, 'Open', wait=True)
         yield from bps.sleep(3)   #Allow some wait time for the shutter opening to finish
     
     yield from bps.mv(diode_shutter, 'Open')
@@ -57,7 +57,7 @@ def _htfly_align(fig=None, ax_hor=None, ax_ver=None):
     yield from inner_align(htfly.x, ax=ax_hor)
 
     yield from bps.mv(diode_shutter, 'Close')
-    pps_shutter.set('Close')
+    yield from bps.abs_set(pps_shutter, 'Close', wait=True)
     yield from bps.sleep(3)
     yield from bps.mv(htfly.x.velocity, start_htflyx_vel)
     yield from htfly_move_to_load()

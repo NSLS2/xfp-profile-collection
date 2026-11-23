@@ -7,12 +7,7 @@ from ophyd import EpicsSignalRO
 from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
 import matplotlib.pyplot as plt
 
-
 from bluesky.plan_stubs import sleep
-
-from matplotlib.backends.qt_compat import QtWidgets, QtCore, QtGui
-import matplotlib.pyplot as plt
-
 
 class RunEngineControlsHTFly:
     def __init__(self, RE, GUI=None):
