@@ -1,13 +1,6 @@
 #Defines classes for beamline / endstation motors
 #Includes: all components in XFP PDS, ES:1, and ES:3.
 
-#This stuff should be imported by 10-fp-devices.py
-import time
-import datetime
-from ophyd import (EpicsMotor, Device,
-                   Component as Cpt, EpicsSignal,
-                   EpicsSignalRO, DeviceStatus)
-
 #CF stage, 100mm travel
 class ModXY_CF(Device):
     x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP ES:1',))

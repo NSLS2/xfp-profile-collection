@@ -1,14 +1,5 @@
 #Defines classes for front-end and accelerator components
 
-#This stuff should be imported by 10-fp-devices.py
-
-import time
-import datetime
-from ophyd import (EpicsMotor, Device,
-                   Component as Cpt, EpicsSignal,
-                   EpicsSignalRO, DeviceStatus)
-
-
 #ring current
 beam_ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
 
