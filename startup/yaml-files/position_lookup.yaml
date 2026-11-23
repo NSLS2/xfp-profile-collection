@@ -21,8 +21,3 @@ pinhole_dict:
  "300um": [4.1, -14.8]
  "150um": [4.3, -24.8]
 
-#Position lookup for micro pinholes on mod34 stage
-micropinhole_dict:
- "in": [25.0, 29.1]
- "out": [45.0, 2.0]
- 
