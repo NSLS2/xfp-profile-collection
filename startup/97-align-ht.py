@@ -16,25 +16,6 @@ LOAD_POS_Y = -50
 QUADEM_DETS = [qem1]
 ALIGN_DETS = {x.name: x for x in QUADEM_DETS + [tcm1]}
 
-
-class TestMode:
-    def __init__(self, test_mode=False):
-        self._test_mode = test_mode
-        self._valid_values = (True, False)
-
-    @property
-    def test_mode(self):
-        return self._test_mode
-
-    @test_mode.setter
-    def test_mode(self, test_mode):
-        assert any([test_mode is x for x in self._valid_values]), \
-            f'The value should be one of {self._valid_values}'
-        self._test_mode = test_mode
-
-mode = TestMode(test_mode=False)
-
-
 def align_ht(x_start=HT_X_START, y_start=HT_Y_START, md=None, offset=3, run=True,
              det=tcm1, fig=None, ax_hor=None, ax_ver=None):
     """Align high-throughput sample holder.

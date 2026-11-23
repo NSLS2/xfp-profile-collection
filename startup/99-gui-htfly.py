@@ -96,28 +96,6 @@ class RunEngineControlsHTFly:
         self.button_pause.setText(button_pause_text)
 
 
-
-
-class TestMode:
-    def __init__(self, test_mode=False):
-        self._test_mode = test_mode
-        self._valid_values = (True, False)
-
-    @property
-    def test_mode(self):
-        return self._test_mode
-
-    @test_mode.setter
-    def test_mode(self, test_mode):
-        assert any(
-            [test_mode is x for x in self._valid_values]
-        ), f"The value should be one of {self._valid_values}"
-        self._test_mode = test_mode
-
-
-mode = TestMode(test_mode=False)
-
-
 class LEDState(Enum):
     QUEUED = QtCore.Qt.blue
     COLLECTING = QtCore.Qt.red
