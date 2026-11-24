@@ -109,7 +109,7 @@ class PreMonoSlits(Device):
     ygap = Cpt(EpicsMotor, 'YGap}Mtr', labels=('monochromatic ES',))
     yctr = Cpt(EpicsMotor, 'YCtr}Mtr', labels=('monochromatic ES',))
 
-premono_slits = PreMonoSlits('XF:17BMA-OP{Slt:PB-Ax:', name='premono_slits')
+premono_slits = PreMonoSlits('XF:17BMA-OP{Slt:PrM-Ax:', name='premono_slits')
 
 #ES:3 vertical lift table (new virtual motor 8/2/23)
 class Table3(Device):
@@ -120,13 +120,13 @@ tbl3 = Table3('XF:17BMA-ES:3{Tbl:3-Ax:', name='tbl3')
 #Galil1 mod12 and mod34 xy stages. Only conencted for greenfield expts.
 #Added settle time for raster scanning with slower detector response.
 class Mod12(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr', settle_time=2, labels=('greenfield ES:2',))
-    y = Cpt(EpicsMotor, 'Y}Mtr', settle_time=2, labels=('greenfield ES:2',))
+    x = Cpt(EpicsMotor, 'X}Mtr', settle_time=0.5)
+    y = Cpt(EpicsMotor, 'Y}Mtr', settle_time=0.5)
 
 mod12 = Mod12('XF:17BMA-ES:2{Mod:12-Ax:', name='mod12')
 
 class Mod34(Device):
-    x = Cpt(EpicsMotor, 'X}Mtr', labels=('greenfield ES:2',))
-    y = Cpt(EpicsMotor, 'Y}Mtr', labels=('greenfield ES:2',))
+    x = Cpt(EpicsMotor, 'X}Mtr')
+    y = Cpt(EpicsMotor, 'Y}Mtr')
 
 mod34 = Mod34('XF:17BMA-ES:2{Mod:34-Ax:', name='mod34')
