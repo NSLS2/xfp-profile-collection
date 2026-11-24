@@ -36,7 +36,7 @@ class HTFly(Device):
     x = Cpt(EpicsMotor, 'X}Mtr', labels=('FP ES:2',))
     y = Cpt(EpicsMotor, 'Y}Mtr', labels=('FP ES:2',))
 
-htfly = HT('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
+htfly = HTFly('XF:17BMA-ES:2{HTFly:1-Ax:', name='htfly')
 
 #Amazon 50mm-100mm slides, not usually connected
 class CVDViewer(Device):

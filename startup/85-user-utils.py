@@ -7,7 +7,6 @@ mtr_pos_config = load_yamlfile_config(MTR_POS_CONFIG_FILE_PATH)
 #read in specific dicts from yaml file
 PINHOLE_DICT = mtr_pos_config.get('pinhole_dict', {})
 ATTEN_DICT = mtr_pos_config.get('attenuator_positions', {})
-MICRO_PINHOLE_DICT = mtr_pos_config.get('micropinhole_dict', {})
 
 def choose_pinhole(pinhole, *, md=None):
     '''
